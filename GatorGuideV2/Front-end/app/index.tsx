@@ -1,5 +1,4 @@
-import { Redirect } from "expo-router";
-
+import AuthPage from "../components/pages/AuthPage";
 export default function Index() {
-  return <Redirect href="/(tabs)" />;
+  return <AuthPage />;
 }

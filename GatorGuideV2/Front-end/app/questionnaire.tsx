@@ -1,5 +1,10 @@
-﻿import QuestionnairePage from "../components/pages/QuestionnairePage";
+﻿import React from "react";
+import { View, Text } from "react-native";
 
 export default function Questionnaire() {
-  return <QuestionnairePage />;
+  return (
+    <View style={{ flex: 1, alignItems: "center", justifyContent: "center" }}>
+      <Text>Questionnaire (placeholder)</Text>
+    </View>
+  );
 }
