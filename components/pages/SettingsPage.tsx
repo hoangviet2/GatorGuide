@@ -1,13 +1,25 @@
-import { useMemo, useState } from "react";
-import { View, Text, Pressable, ScrollView } from "react-native";
-import { router } from "expo-router";
-import { MaterialIcons } from "@expo/vector-icons";
-import { useAppTheme } from "@/hooks/use-app-theme";
 import { ScreenBackground } from "@/components/layouts/ScreenBackground";
+import { useAppTheme } from "@/hooks/use-app-theme";
+import { MaterialIcons } from "@expo/vector-icons";
+import { router } from "expo-router";
+import { useMemo, useState } from "react";
+import { Pressable, ScrollView, Text, View } from "react-native";
 
 type SettingsItem =
-  | { label: string; icon: keyof typeof MaterialIcons.glyphMap; type: "toggle"; enabled: boolean; onPress: () => void }
-  | { label: string; icon: keyof typeof MaterialIcons.glyphMap; type: "nav"; value?: string; onPress: () => void };
+  | {
+      label: string;
+      icon: keyof typeof MaterialIcons.glyphMap;
+      type: "toggle";
+      enabled: boolean;
+      onPress: () => void;
+    }
+  | {
+      label: string;
+      icon: keyof typeof MaterialIcons.glyphMap;
+      type: "nav";
+      value?: string;
+      onPress: () => void;
+    };
 
 export default function SettingsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
@@ -57,6 +69,7 @@ export default function SettingsPage() {
         title: "Support",
         items: [
           { icon: "info", label: "About", type: "nav", onPress: () => router.push("/about") },
+          { icon: "map", label: "Roadmap", type: "nav", onPress: () => router.push("/roadmap") },
         ] as SettingsItem[],
       },
     ],
@@ -112,13 +125,19 @@ export default function SettingsPage() {
                     <Pressable
                       key={item.label}
                       onPress={item.onPress}
-                      className={`flex-row items-center px-4 py-5 ${index !== section.items.length - 1 ? `border-b ${cardBorderClass}` : ""}`}
+                      className={`flex-row items-center px-4 py-5 ${
+                        index !== section.items.length - 1 ? `border-b ${cardBorderClass}` : ""
+                      }`}
                     >
                       <MaterialIcons name={item.icon} size={20} color="#22C55E" />
                       <Text className={`flex-1 ml-3 ${textClass}`}>{item.label}</Text>
 
                       {item.type === "toggle" ? (
-                        <View className={`w-12 h-6 rounded-full ${item.enabled ? "bg-green-500" : isDarkMode ? "bg-gray-700" : "bg-gray-300"}`}>
+                        <View
+                          className={`w-12 h-6 rounded-full ${
+                            item.enabled ? "bg-green-500" : isDarkMode ? "bg-gray-700" : "bg-gray-300"
+                          }`}
+                        >
                           <View className={`w-5 h-5 bg-white rounded-full mt-0.5 ${item.enabled ? "ml-6" : "ml-0.5"}`} />
                         </View>
                       ) : item.value ? (
@@ -134,7 +153,9 @@ export default function SettingsPage() {
 
             <Pressable
               onPress={handleLogout}
-              className={`w-full ${isDarkMode ? "bg-red-500/10 border-red-500/20" : "bg-red-50 border-red-200"} border rounded-2xl px-4 py-5 flex-row items-center`}
+              className={`w-full ${
+                isDarkMode ? "bg-red-500/10 border-red-500/20" : "bg-red-50 border-red-200"
+              } border rounded-2xl px-4 py-5 flex-row items-center`}
             >
               <MaterialIcons name="logout" size={20} color="#EF4444" />
               <Text className="flex-1 ml-3 text-red-500">Logout</Text>
@@ -142,7 +163,9 @@ export default function SettingsPage() {
 
             <Pressable
               onPress={() => setShowDeleteConfirm(true)}
-              className={`w-full ${isDarkMode ? "bg-red-500/10 border-red-500/20" : "bg-red-50 border-red-200"} border rounded-2xl px-4 py-5 flex-row items-center`}
+              className={`w-full ${
+                isDarkMode ? "bg-red-500/10 border-red-500/20" : "bg-red-50 border-red-200"
+              } border rounded-2xl px-4 py-5 flex-row items-center`}
             >
               <MaterialIcons name="delete" size={20} color="#EF4444" />
               <Text className="flex-1 ml-3 text-red-500">Delete Account</Text>
