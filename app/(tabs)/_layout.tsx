@@ -35,6 +35,16 @@ export default function TabLayout() {
       />
 
       <Tabs.Screen
+        name="resources"
+        options={{
+          title: "Resources",
+          tabBarIcon: ({ color, size }) => (
+            <Ionicons name="library" size={size ?? 26} color={color} />
+          ),
+        }}
+      />
+
+      <Tabs.Screen
         name="profile"
         options={{
           title: "Profile",
@@ -53,6 +63,9 @@ export default function TabLayout() {
           ),
         }}
       />
+
+      {/* Hide Plan if app/(tabs)/plan.tsx still exists */}
+      <Tabs.Screen name="plan" options={{ href: null }} />
     </Tabs>
   );
 }
