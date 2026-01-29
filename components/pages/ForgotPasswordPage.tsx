@@ -1,24 +1,24 @@
 // components/pages/ForgotPasswordPage.tsx
 import { useMemo, useState } from "react";
-import { View, Text, TextInput, Pressable, Alert } from "react-native";
+import { View, Text, Pressable, Alert } from "react-native";
 import { router } from "expo-router";
 import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import { ScreenBackground } from "@/components/layouts/ScreenBackground";
-import { useAppTheme } from "@/hooks/use-app-theme";
+import { useThemeStyles } from "@/hooks/use-theme-styles";
+import { FormInput } from "@/components/ui/FormInput";
+
+const isEmailValid = (value: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value.trim());
 
 export default function ForgotPasswordPage() {
-  const { isDark } = useAppTheme();
+  const styles = useThemeStyles();
 
   const [email, setEmail] = useState("");
   const [isSuccess, setIsSuccess] = useState(false);
 
-  const textClass = isDark ? "text-white" : "text-gray-900";
-  const secondaryTextClass = isDark ? "text-gray-400" : "text-gray-600";
-  const cardBgClass = isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200";
-  const inputBgClass = isDark ? "bg-gray-800 border-gray-700" : "bg-gray-50 border-gray-300";
-  const placeholderColor = isDark ? "#9CA3AF" : "#6B7280";
-
-  const isEmailValid = (value: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value.trim());
+  const emailError = useMemo(() => {
+    const trimmed = email.trim();
+    return trimmed && !isEmailValid(trimmed) ? "Enter a valid email." : undefined;
+  }, [email]);
 
   const canSubmit = useMemo(() => isEmailValid(email), [email]);
 
@@ -48,13 +48,13 @@ export default function ForgotPasswordPage() {
               </View>
             </View>
 
-            <Text className={`text-3xl text-center ${textClass} mb-2`}>Check Your Email</Text>
-            <Text className={`${secondaryTextClass} text-center mb-8`}>
+            <Text className={`text-3xl text-center ${styles.textClass} mb-2`}>Check Your Email</Text>
+            <Text className={`${styles.secondaryTextClass} text-center mb-8`}>
               We&apos;ve sent a password reset link to {email.trim()}
             </Text>
 
-            <View className={`${cardBgClass} border rounded-2xl p-6`}>
-              <Text className={`text-sm ${secondaryTextClass} text-center`}>
+            <View className={`${styles.cardBgClass} border rounded-2xl p-6`}>
+              <Text className={`text-sm ${styles.secondaryTextClass} text-center`}>
                 Click the link in the email to reset your password. If you don&apos;t see it, check your spam folder.
               </Text>
             </View>
@@ -69,8 +69,8 @@ export default function ForgotPasswordPage() {
       <View className="flex-1 px-6 py-8">
         <View className="w-full max-w-md self-center">
           <Pressable onPress={() => router.back()} className="mb-8 flex-row items-center">
-            <MaterialIcons name="arrow-back" size={20} color={isDark ? "#9CA3AF" : "#6B7280"} />
-            <Text className={`${secondaryTextClass} ml-2`}>Back to Login</Text>
+            <MaterialIcons name="arrow-back" size={20} color={styles.placeholderColor} />
+            <Text className={`${styles.secondaryTextClass} ml-2`}>Back to Login</Text>
           </Pressable>
 
           <View className="items-center mb-8">
@@ -79,31 +79,28 @@ export default function ForgotPasswordPage() {
             </View>
           </View>
 
-          <Text className={`text-3xl text-center ${textClass} mb-2`}>Forgot Password?</Text>
-          <Text className={`${secondaryTextClass} text-center mb-8`}>
+          <Text className={`text-3xl text-center ${styles.textClass} mb-2`}>Forgot Password?</Text>
+          <Text className={`${styles.secondaryTextClass} text-center mb-8`}>
             Enter your email and we&apos;ll send you a reset link
           </Text>
 
-          <View className={`${cardBgClass} border rounded-2xl p-6`}>
+          <View className={`${styles.cardBgClass} border rounded-2xl p-6`}>
             <View className="gap-4">
-              <View>
-                <Text className={`text-sm ${secondaryTextClass} mb-2`}>Email Address</Text>
-                <TextInput
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder="Enter your email"
-                  placeholderTextColor={placeholderColor}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  className={`w-full ${inputBgClass} ${textClass} border rounded-lg px-4 py-3`}
-                  returnKeyType="done"
-                />
-
-                {!!email.trim() && !isEmailValid(email) ? (
-                  <Text className="text-xs text-red-400 mt-2">Enter a valid email.</Text>
-                ) : null}
-              </View>
+              <FormInput
+                label="Email Address"
+                value={email}
+                onChangeText={setEmail}
+                placeholder="Enter your email"
+                error={emailError}
+                textClass={styles.textClass}
+                secondaryTextClass={styles.secondaryTextClass}
+                inputBgClass={styles.inputBgClass}
+                placeholderColor={styles.placeholderColor}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="done"
+              />
 
               <Pressable
                 onPress={handleSubmit}

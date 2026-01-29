@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useState } from "react";
-import { View, Text, TextInput, Pressable, ScrollView } from "react-native";
+import { View, Text, Pressable, ScrollView } from "react-native";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import { ScreenBackground } from "@/components/layouts/ScreenBackground";
 import { useAppTheme } from "@/hooks/use-app-theme";
 import { useAppData } from "@/hooks/use-app-data";
+import { ProfileField } from "@/components/ui/ProfileField";
 
 export default function ProfilePage() {
   const { isDark } = useAppTheme();
@@ -34,6 +35,7 @@ export default function ProfilePage() {
   const secondaryTextClass = isDark ? "text-gray-400" : "text-gray-600";
   const cardBgClass = isDark ? "bg-gray-900/80 border-gray-800" : "bg-white/90 border-gray-200";
   const inputBgClass = isDark ? "bg-gray-900/80 border-gray-800" : "bg-white/90 border-gray-200";
+  const inputClass = `w-full ${inputBgClass} ${textClass} border rounded-lg px-3 py-2`;
   const borderClass = isDark ? "border-gray-800" : "border-gray-200";
   const placeholderColor = isDark ? "#9CA3AF" : "#6B7280";
 
@@ -127,102 +129,84 @@ export default function ProfilePage() {
                 </View>
               </View>
 
-              {/* Email */}
-              <View className={`border-t ${borderClass} pt-4`}>
-                <View className="flex-row items-start">
-                  <MaterialIcons name="mail" size={20} color="#22C55E" />
-                  <View className="flex-1 ml-3">
-                    <Text className={`text-sm ${secondaryTextClass} mb-1`}>Email</Text>
-                    <Text className={textClass}>{user.email}</Text>
-                  </View>
-                </View>
-              </View>
+              <ProfileField
+                type="display"
+                icon="mail"
+                label="Email"
+                value={user.email}
+                isEditing={false}
+                textClass={textClass}
+                secondaryTextClass={secondaryTextClass}
+                borderClass={borderClass}
+              />
 
-              {/* Major */}
-              <View className={`border-t ${borderClass} pt-4 mt-4`}>
-                <View className="flex-row items-start">
-                  <MaterialIcons name="school" size={20} color="#22C55E" />
-                  <View className="flex-1 ml-3">
-                    <Text className={`text-sm ${secondaryTextClass} mb-1`}>Major</Text>
-                    {isEditing ? (
-                      <TextInput
-                        value={editData.major}
-                        onChangeText={(t) => setEditData((p) => ({ ...p, major: t }))}
-                        placeholder="e.g., Computer Science"
-                        placeholderTextColor={placeholderColor}
-                        className={`w-full ${inputBgClass} ${textClass} border rounded-lg px-3 py-2`}
-                      />
-                    ) : (
-                      <Text className={textClass}>{user.major || "Not specified"}</Text>
-                    )}
-                  </View>
-                </View>
-              </View>
+              <ProfileField
+                type="text"
+                icon="school"
+                label="Major"
+                value={user.major}
+                isEditing={isEditing}
+                editValue={editData.major}
+                onChangeText={(t) => setEditData((p) => ({ ...p, major: t }))}
+                placeholder="e.g., Computer Science"
+                placeholderColor={placeholderColor}
+                inputBgClass={inputBgClass}
+                inputClass={inputClass}
+                textClass={textClass}
+                secondaryTextClass={secondaryTextClass}
+                borderClass={borderClass}
+              />
 
-              {/* GPA */}
-              <View className={`border-t ${borderClass} pt-4 mt-4`}>
-                <View className="flex-row items-start">
-                  <MaterialIcons name="description" size={20} color="#22C55E" />
-                  <View className="flex-1 ml-3">
-                    <Text className={`text-sm ${secondaryTextClass} mb-1`}>GPA (0.0 - 4.0)</Text>
-                    {isEditing ? (
-                      <TextInput
-                        value={editData.gpa}
-                        onChangeText={handleGpaChange}
-                        placeholder="e.g., 3.8"
-                        placeholderTextColor={placeholderColor}
-                        keyboardType="decimal-pad"
-                        className={`w-full ${inputBgClass} ${textClass} border rounded-lg px-3 py-2`}
-                      />
-                    ) : (
-                      <Text className={textClass}>{user.gpa || "Not specified"}</Text>
-                    )}
-                  </View>
-                </View>
-              </View>
+              <ProfileField
+                type="text"
+                icon="description"
+                label="GPA (0.0 - 4.0)"
+                value={user.gpa}
+                isEditing={isEditing}
+                editValue={editData.gpa}
+                onChangeText={handleGpaChange}
+                placeholder="e.g., 3.8"
+                placeholderColor={placeholderColor}
+                inputBgClass={inputBgClass}
+                inputClass={inputClass}
+                keyboardType="decimal-pad"
+                textClass={textClass}
+                secondaryTextClass={secondaryTextClass}
+                borderClass={borderClass}
+              />
 
-              {/* Test Scores */}
-              <View className={`border-t ${borderClass} pt-4 mt-4`}>
-                <View className="flex-row items-start">
-                  <MaterialIcons name="notes" size={20} color="#22C55E" />
-                  <View className="flex-1 ml-3">
-                    <Text className={`text-sm ${secondaryTextClass} mb-1`}>Test Scores</Text>
-                    {isEditing ? (
-                      <TextInput
-                        value={editData.testScores}
-                        onChangeText={(t) => setEditData((p) => ({ ...p, testScores: t }))}
-                        placeholder="e.g., SAT: 1450"
-                        placeholderTextColor={placeholderColor}
-                        className={`w-full ${inputBgClass} ${textClass} border rounded-lg px-3 py-2`}
-                      />
-                    ) : (
-                      <Text className={textClass}>{user.testScores || "Not specified"}</Text>
-                    )}
-                  </View>
-                </View>
-              </View>
+              <ProfileField
+                type="text"
+                icon="notes"
+                label="Test Scores"
+                value={user.testScores}
+                isEditing={isEditing}
+                editValue={editData.testScores}
+                onChangeText={(t) => setEditData((p) => ({ ...p, testScores: t }))}
+                placeholder="e.g., SAT: 1450"
+                placeholderColor={placeholderColor}
+                inputBgClass={inputBgClass}
+                inputClass={inputClass}
+                textClass={textClass}
+                secondaryTextClass={secondaryTextClass}
+                borderClass={borderClass}
+              />
 
-              {/* Resume */}
-              <View className={`border-t ${borderClass} pt-4 mt-4`}>
-                <View className="flex-row items-start">
-                  <MaterialIcons name="upload-file" size={20} color="#22C55E" />
-                  <View className="flex-1 ml-3">
-                    <Text className={`text-sm ${secondaryTextClass} mb-1`}>Resume</Text>
-
-                    {isEditing ? (
-                      <Pressable
-                        onPress={handlePickResume}
-                        className={`${inputBgClass} border rounded-lg px-3 py-3 flex-row items-center justify-between`}
-                      >
-                        <Text className={`${textClass} text-sm`}>{editData.resume || "Upload resume"}</Text>
-                        <MaterialIcons name="upload" size={18} color="#22C55E" />
-                      </Pressable>
-                    ) : (
-                      <Text className={textClass}>{user.resume || "Not uploaded"}</Text>
-                    )}
-                  </View>
-                </View>
-              </View>
+              <ProfileField
+                type="upload"
+                icon="upload-file"
+                label="Resume"
+                value={user.resume}
+                isEditing={isEditing}
+                editValue={editData.resume}
+                onPress={handlePickResume}
+                uploadText="Upload resume"
+                emptyText="Not uploaded"
+                inputBgClass={inputBgClass}
+                textClass={textClass}
+                secondaryTextClass={secondaryTextClass}
+                borderClass={borderClass}
+              />
             </View>
 
             {/* Questionnaire */}

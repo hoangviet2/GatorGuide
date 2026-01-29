@@ -121,6 +121,11 @@ export default function QuestionnairePage() {
     else router.back();
   };
 
+  const handleSaveAndExit = async () => {
+    await setQuestionnaireAnswers(answers);
+    router.back();
+  };
+
   return (
     <ScreenBackground>
       <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
@@ -201,7 +206,7 @@ export default function QuestionnairePage() {
               ) : null}
 
               {/* Footer */}
-              <View className={`mt-6 pt-6 border-t ${borderClass}`}>
+              <View className={`mt-6 pt-6 border-t ${borderClass} gap-3`}>
                 <Pressable
                   onPress={handleNext}
                   className={`w-full bg-green-500 rounded-lg py-4 items-center ${!isHydrated ? "opacity-60" : ""}`}
@@ -210,6 +215,14 @@ export default function QuestionnairePage() {
                   <Text className="text-black font-semibold">
                     {currentStep === questions.length - 1 ? "Complete" : "Next"}
                   </Text>
+                </Pressable>
+
+                <Pressable
+                  onPress={handleSaveAndExit}
+                  className={`w-full ${isDark ? "bg-gray-800 border-gray-700" : "bg-gray-100 border-gray-300"} border rounded-lg py-4 items-center ${!isHydrated ? "opacity-60" : ""}`}
+                  disabled={!isHydrated}
+                >
+                  <Text className={`${textClass} font-semibold`}>Save & Exit</Text>
                 </Pressable>
               </View>
             </View>

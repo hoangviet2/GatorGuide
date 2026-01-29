@@ -3,25 +3,27 @@ import { View, Text, TextInput, Pressable, ScrollView } from "react-native";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import { ScreenBackground } from "@/components/layouts/ScreenBackground";
-import { useAppTheme } from "@/hooks/use-app-theme";
+import { useAppData } from "@/hooks/use-app-data";
+import { useThemeStyles } from "@/hooks/use-theme-styles";
+import { FormInput } from "@/components/ui/FormInput";
 
 export default function ProfileSetupPage() {
-  const { isDark } = useAppTheme();
+  const { updateUser } = useAppData();
+  const styles = useThemeStyles();
 
+  const [step, setStep] = useState(1);
   const [major, setMajor] = useState("");
   const [resume, setResume] = useState("");
+  const [transcript, setTranscript] = useState("");
   const [gpa, setGpa] = useState("");
   const [testScores, setTestScores] = useState("");
 
-  const textClass = isDark ? "text-white" : "text-gray-900";
-  const secondaryTextClass = isDark ? "text-gray-400" : "text-gray-600";
-  const cardBgClass = isDark ? "bg-gray-900/80 border-gray-800" : "bg-white border-gray-200";
-  const inputBgClass = isDark ? "bg-gray-900/80 border-gray-800" : "bg-white/90 border-gray-200";
-  const progressBgClass = isDark ? "bg-gray-800" : "bg-gray-200";
-  const placeholderColor = useMemo(() => (isDark ? "#9CA3AF" : "#6B7280"), [isDark]);
-
   const handleBack = () => {
-    router.replace("/login");
+    if (step > 1) {
+      setStep(step - 1);
+    } else {
+      router.replace("/login");
+    }
   };
 
   const handleGpaChange = (value: string) => {
@@ -37,8 +39,20 @@ export default function ProfileSetupPage() {
     router.replace("/(tabs)");
   };
 
-  const handleContinue = () => {
-    // later: save to Firebase / state store
+  const handleNext = () => {
+    if (step < 3) {
+      setStep(step + 1);
+    }
+  };
+
+  const handleContinue = async () => {
+    await updateUser({
+      major,
+      gpa,
+      testScores,
+      resume,
+      transcript,
+    });
     router.replace("/(tabs)");
   };
 
@@ -47,95 +61,138 @@ export default function ProfileSetupPage() {
     setResume("resume.pdf");
   };
 
+  const handlePickTranscript = () => {
+    // stub for now (Expo Go file picking will be added later)
+    setTranscript("transcript.pdf");
+  };
+
   return (
     <ScreenBackground>
       <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
         <View className="w-full max-w-md self-center px-6 pt-8">
           <Pressable onPress={handleBack} className="mb-6 flex-row items-center">
-            <MaterialIcons name="arrow-back" size={20} color={isDark ? "#9CA3AF" : "#6B7280"} />
+            <MaterialIcons name="arrow-back" size={20} color={styles.placeholderColor} />
           </Pressable>
 
           <View className="mb-8">
-            <Text className={`text-2xl ${textClass} mb-2`}>Set Up Your Profile</Text>
-            <Text className={secondaryTextClass}>
+            <Text className={`text-2xl ${styles.textClass} mb-2`}>Set Up Your Profile</Text>
+            <Text className={styles.secondaryTextClass}>
               Tell us about yourself to get personalized college recommendations
             </Text>
           </View>
 
           <View className="flex-row gap-2 mb-8">
-            <View className="h-1 flex-1 bg-green-500 rounded" />
-            <View className={`h-1 flex-1 ${progressBgClass} rounded`} />
-            <View className={`h-1 flex-1 ${progressBgClass} rounded`} />
+            <View className={`h-1 flex-1 rounded ${step >= 1 ? "bg-green-500" : styles.progressBgClass}`} />
+            <View className={`h-1 flex-1 rounded ${step >= 2 ? "bg-green-500" : styles.progressBgClass}`} />
+            <View className={`h-1 flex-1 rounded ${step >= 3 ? "bg-green-500" : styles.progressBgClass}`} />
           </View>
 
           <View className="gap-4">
-            <View>
-              <Text className={`text-sm ${secondaryTextClass} mb-2`}>Intended Major/Field of Study</Text>
-              <TextInput
+            {/* Step 1: Major */}
+            {step === 1 && (
+              <FormInput
+                label="Intended Major/Field of Study"
                 value={major}
                 onChangeText={setMajor}
                 placeholder="e.g., Computer Science"
-                placeholderTextColor={placeholderColor}
-                className={`w-full ${inputBgClass} ${textClass} border rounded-lg px-4 py-3`}
+                textClass={styles.textClass}
+                secondaryTextClass={styles.secondaryTextClass}
+                inputBgClass={styles.inputBgClass}
+                placeholderColor={styles.placeholderColor}
               />
-            </View>
+            )}
 
-            <View>
-              <Text className={`text-sm ${secondaryTextClass} mb-2`}>GPA (0.0 - 4.0, Optional)</Text>
-              <TextInput
-                value={gpa}
-                onChangeText={handleGpaChange}
-                placeholder="e.g., 3.8"
-                placeholderTextColor={placeholderColor}
-                keyboardType="decimal-pad"
-                className={`w-full ${inputBgClass} ${textClass} border rounded-lg px-4 py-3`}
-              />
-            </View>
+            {/* Step 2: GPA & Test Scores */}
+            {step === 2 && (
+              <>
+                <FormInput
+                  label="GPA (0.0 - 4.0, Optional)"
+                  value={gpa}
+                  onChangeText={handleGpaChange}
+                  placeholder="e.g., 3.8"
+                  keyboardType="decimal-pad"
+                  textClass={styles.textClass}
+                  secondaryTextClass={styles.secondaryTextClass}
+                  inputBgClass={styles.inputBgClass}
+                  placeholderColor={styles.placeholderColor}
+                />
 
-            <View>
-              <Text className={`text-sm ${secondaryTextClass} mb-2`}>Test Scores (Optional)</Text>
-              <TextInput
-                value={testScores}
-                onChangeText={setTestScores}
-                placeholder="e.g., SAT: 1450, ACT: 32"
-                placeholderTextColor={placeholderColor}
-                className={`w-full ${inputBgClass} ${textClass} border rounded-lg px-4 py-3`}
-              />
-            </View>
+                <FormInput
+                  label="Test Scores (Optional)"
+                  value={testScores}
+                  onChangeText={setTestScores}
+                  placeholder="e.g., SAT: 1450, ACT: 32"
+                  textClass={styles.textClass}
+                  secondaryTextClass={styles.secondaryTextClass}
+                  inputBgClass={styles.inputBgClass}
+                  placeholderColor={styles.placeholderColor}
+                />
+              </>
+            )}
 
-            <View>
-              <Text className={`text-sm ${secondaryTextClass} mb-2`}>Resume (Optional)</Text>
+            {/* Step 3: Resume & Transcript */}
+            {step === 3 && (
+              <View className="gap-4">
+                <View>
+                  <Text className={`text-sm ${styles.secondaryTextClass} mb-2`}>Resume (Optional)</Text>
 
-              <Pressable
-                onPress={handlePickResume}
-                className={`${cardBgClass} border rounded-lg px-4 py-4 flex-row items-center justify-between`}
-              >
-                <Text className={resume ? textClass : secondaryTextClass}>{resume || "Upload your resume"}</Text>
-                <MaterialIcons name="upload-file" size={20} color="#22C55E" />
-              </Pressable>
+                  <Pressable
+                    onPress={handlePickResume}
+                    className={`${styles.cardBgClass} border rounded-lg px-4 py-4 flex-row items-center justify-between`}
+                  >
+                    <Text className={resume ? styles.textClass : styles.secondaryTextClass}>{resume || "Upload your resume"}</Text>
+                    <MaterialIcons name="upload-file" size={20} color="#22C55E" />
+                  </Pressable>
 
-              <Text className={`text-xs ${secondaryTextClass} mt-2`}>
-                File upload is stubbed for now. We can add Document Picker later.
-              </Text>
-            </View>
+                  <Text className={`text-xs ${styles.secondaryTextClass} mt-2`}>
+                    File upload is stubbed for now. We can add Document Picker later.
+                  </Text>
+                </View>
 
+                <View>
+                  <Text className={`text-sm ${styles.secondaryTextClass} mb-2`}>Unofficial Transcript (Optional)</Text>
+
+                  <Pressable
+                    onPress={handlePickTranscript}
+                    className={`${styles.cardBgClass} border rounded-lg px-4 py-4 flex-row items-center justify-between`}
+                  >
+                    <Text className={transcript ? styles.textClass : styles.secondaryTextClass}>{transcript || "Upload your transcript"}</Text>
+                    <MaterialIcons name="upload-file" size={20} color="#22C55E" />
+                  </Pressable>
+
+                  <Text className={`text-xs ${styles.secondaryTextClass} mt-2`}>
+                    File upload is stubbed for now. We can add Document Picker later.
+                  </Text>
+                </View>
+              </View>
+            )}
+
+            {/* Navigation Buttons */}
             <View className="flex-row gap-4 pt-6">
               <Pressable
-                onPress={handleSkip}
-                className={`flex-1 rounded-lg py-4 items-center border ${
-                  isDark ? "bg-gray-900/60 border-gray-800" : "bg-white/90 border-gray-200"
-                }`}
+                onPress={handleBack}
+                className={`flex-1 rounded-lg py-4 items-center border ${styles.cardBgClass}`}
               >
-                <Text className={secondaryTextClass}>Skip for Now</Text>
+                <Text className={styles.secondaryTextClass}>{step === 1 ? "Back" : "Previous"}</Text>
               </Pressable>
 
-              <Pressable
-                onPress={handleContinue}
-                className="flex-1 bg-green-500 rounded-lg py-4 items-center flex-row justify-center"
-              >
-                <Text className="text-black font-semibold mr-2">Continue</Text>
-                <MaterialIcons name="arrow-forward" size={18} color="black" />
-              </Pressable>
+              {step < 3 ? (
+                <Pressable
+                  onPress={handleNext}
+                  className="flex-1 bg-green-500 rounded-lg py-4 items-center flex-row justify-center"
+                >
+                  <Text className="text-black font-semibold mr-2">Next</Text>
+                  <MaterialIcons name="arrow-forward" size={18} color="black" />
+                </Pressable>
+              ) : (
+                <Pressable
+                  onPress={handleContinue}
+                  className="flex-1 bg-green-500 rounded-lg py-4 items-center flex-row justify-center"
+                >
+                  <Text className="text-black font-semibold mr-2">Continue</Text>
+                  <MaterialIcons name="arrow-forward" size={18} color="black" />
+                </Pressable>
+              )}
             </View>
           </View>
         </View>

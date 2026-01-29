@@ -8,6 +8,7 @@ export type User = {
   gpa?: string;
   testScores?: string;
   resume?: string; // store a filename or local URI later
+  transcript?: string; // store a filename or local URI later
 };
 
 export type QuestionnaireAnswers = Record<string, string>;

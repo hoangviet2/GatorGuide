@@ -1,41 +1,35 @@
 // components/pages/AuthPage.tsx
 import { useEffect, useMemo, useState } from "react";
-import { View, Text, TextInput, Pressable, Alert } from "react-native";
+import { View, Text, Pressable, Alert } from "react-native";
 import { router } from "expo-router";
 import { FontAwesome5 } from "@expo/vector-icons";
 import { ScreenBackground } from "@/components/layouts/ScreenBackground";
-import { useAppTheme } from "@/hooks/use-app-theme";
 import { useAppData } from "@/hooks/use-app-data";
+import { useThemeStyles } from "@/hooks/use-theme-styles";
+import { FormInput } from "@/components/ui/FormInput";
+
+const isEmailValid = (value: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value.trim());
 
 export default function AuthPage() {
-  const { isDark } = useAppTheme();
   const { isHydrated, state, signIn } = useAppData();
+  const styles = useThemeStyles();
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [isSignUp, setIsSignUp] = useState(true);
-
-  const textClass = isDark ? "text-white" : "text-gray-900";
-  const secondaryTextClass = isDark ? "text-gray-400" : "text-gray-600";
-  const cardBgClass = isDark ? "bg-gray-900 border-gray-800" : "bg-white border-gray-200";
-  const inputBgClass = isDark ? "bg-gray-800 border-gray-700" : "bg-gray-50 border-gray-300";
-  const inactiveButtonClass = isDark ? "bg-gray-800" : "bg-gray-100";
-  const placeholderColor = isDark ? "#9CA3AF" : "#6B7280";
 
   useEffect(() => {
     if (!isHydrated) return;
     if (state.user) router.replace("/(tabs)");
   }, [isHydrated, state.user]);
 
-  // - at least 1 char before @
-  // - at least 1 char between @ and .
-  // - at least 1 char after .
-  const isEmailValid = (value: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value.trim());
+  const emailError = useMemo(() => {
+    const trimmed = email.trim();
+    return trimmed && !isEmailValid(trimmed) ? "Enter a valid email." : undefined;
+  }, [email]);
 
   const canSubmit = useMemo(() => {
-    const n = name.trim();
-    const e = email.trim();
-    return !!n && isEmailValid(e);
+    return !!name.trim() && isEmailValid(email.trim());
   }, [name, email]);
 
   const handleSubmit = async () => {
@@ -53,7 +47,7 @@ export default function AuthPage() {
     }
 
     await signIn({ name: n, email: e });
-    router.replace("/(tabs)");
+    router.replace("/profile-setup");
   };
 
   return (
@@ -66,60 +60,58 @@ export default function AuthPage() {
             </View>
           </View>
 
-          <Text className={`text-3xl text-center ${textClass} mb-2`}>Gator Guide</Text>
-          <Text className={`${secondaryTextClass} text-center mb-8`}>Find your perfect college match</Text>
+          <Text className={`text-3xl text-center ${styles.textClass} mb-2`}>Gator Guide</Text>
+          <Text className={`${styles.secondaryTextClass} text-center mb-8`}>Find your perfect college match</Text>
 
-          <View className={`${cardBgClass} border rounded-2xl p-6`}>
+          <View className={`${styles.cardBgClass} border rounded-2xl p-6`}>
             <View className="flex-row gap-4 mb-6">
               <Pressable
                 onPress={() => setIsSignUp(true)}
-                className={`flex-1 py-3 rounded-lg items-center ${isSignUp ? "bg-green-500" : inactiveButtonClass}`}
+                className={`flex-1 py-3 rounded-lg items-center ${isSignUp ? "bg-green-500" : styles.inactiveButtonClass}`}
                 disabled={!isHydrated}
               >
-                <Text className={isSignUp ? "text-black" : secondaryTextClass}>Sign Up</Text>
+                <Text className={isSignUp ? "text-black" : styles.secondaryTextClass}>Sign Up</Text>
               </Pressable>
 
               <Pressable
                 onPress={() => setIsSignUp(false)}
-                className={`flex-1 py-3 rounded-lg items-center ${!isSignUp ? "bg-green-500" : inactiveButtonClass}`}
+                className={`flex-1 py-3 rounded-lg items-center ${!isSignUp ? "bg-green-500" : styles.inactiveButtonClass}`}
                 disabled={!isHydrated}
               >
-                <Text className={!isSignUp ? "text-black" : secondaryTextClass}>Login</Text>
+                <Text className={!isSignUp ? "text-black" : styles.secondaryTextClass}>Login</Text>
               </Pressable>
             </View>
 
             <View className="gap-4">
-              <View>
-                <Text className={`text-sm ${secondaryTextClass} mb-2`}>Name</Text>
-                <TextInput
-                  value={name}
-                  onChangeText={setName}
-                  placeholder="Enter your name"
-                  placeholderTextColor={placeholderColor}
-                  className={`w-full ${inputBgClass} ${textClass} border rounded-lg px-4 py-3`}
-                  editable={isHydrated}
-                  returnKeyType="next"
-                />
-              </View>
+              <FormInput
+                label="Name"
+                value={name}
+                onChangeText={setName}
+                placeholder="Enter your name"
+                textClass={styles.textClass}
+                secondaryTextClass={styles.secondaryTextClass}
+                inputBgClass={styles.inputBgClass}
+                placeholderColor={styles.placeholderColor}
+                isEnabled={isHydrated}
+                returnKeyType="next"
+              />
 
-              <View>
-                <Text className={`text-sm ${secondaryTextClass} mb-2`}>Email</Text>
-                <TextInput
-                  value={email}
-                  onChangeText={setEmail}
-                  placeholder="Enter your email"
-                  placeholderTextColor={placeholderColor}
-                  keyboardType="email-address"
-                  autoCapitalize="none"
-                  autoCorrect={false}
-                  className={`w-full ${inputBgClass} ${textClass} border rounded-lg px-4 py-3`}
-                  editable={isHydrated}
-                  returnKeyType="done"
-                />
-                {!!email.trim() && !isEmailValid(email) ? (
-                  <Text className="text-xs text-red-400 mt-2">Enter a valid email.</Text>
-                ) : null}
-              </View>
+              <FormInput
+                label="Email"
+                value={email}
+                onChangeText={setEmail}
+                placeholder="Enter your email"
+                error={emailError}
+                textClass={styles.textClass}
+                secondaryTextClass={styles.secondaryTextClass}
+                inputBgClass={styles.inputBgClass}
+                placeholderColor={styles.placeholderColor}
+                isEnabled={isHydrated}
+                keyboardType="email-address"
+                autoCapitalize="none"
+                autoCorrect={false}
+                returnKeyType="done"
+              />
 
               {!isSignUp && (
                 <View className="items-end">
