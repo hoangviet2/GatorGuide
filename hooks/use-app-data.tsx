@@ -96,7 +96,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     setState((prev) => ({ ...prev, user: null }));
   }, []);
 
-  const updateUser = useCallback(async (patch: Partial<User>) => {
+  const updateUser = useCallback((patch: Partial<User>) => {
     setState((prev) => {
       if (!prev.user) return prev;
       return {

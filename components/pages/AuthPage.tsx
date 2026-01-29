@@ -117,7 +117,7 @@ export default function AuthPage() {
                   returnKeyType="done"
                 />
                 {!!email.trim() && !isEmailValid(email) ? (
-                  <Text className="text-xs text-red-400 mt-2">Enter a valid email (minimum format: d@d.c).</Text>
+                  <Text className="text-xs text-red-400 mt-2">Enter a valid email.</Text>
                 ) : null}
               </View>
 

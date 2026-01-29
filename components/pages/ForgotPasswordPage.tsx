@@ -18,7 +18,6 @@ export default function ForgotPasswordPage() {
   const inputBgClass = isDark ? "bg-gray-800 border-gray-700" : "bg-gray-50 border-gray-300";
   const placeholderColor = isDark ? "#9CA3AF" : "#6B7280";
 
-  // Minimum format: d@d.c
   const isEmailValid = (value: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value.trim());
 
   const canSubmit = useMemo(() => isEmailValid(email), [email]);

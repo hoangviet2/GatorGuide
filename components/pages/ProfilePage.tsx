@@ -42,9 +42,9 @@ export default function ProfilePage() {
     [state.questionnaireAnswers]
   );
 
-  const handleSave = async () => {
+  const handleSave = () => {
     if (!user) return;
-    await updateUser({
+    updateUser({
       major: editData.major,
       gpa: editData.gpa,
       testScores: editData.testScores,
@@ -99,9 +99,14 @@ export default function ProfilePage() {
             <Text className={`text-2xl ${textClass}`}>Profile</Text>
 
             <Pressable
-              onPress={() => (isEditing ? handleSave() : setIsEditing(true))}
+              onPress={() => {
+                if (isEditing) {
+                  handleSave();
+                } else {
+                  setIsEditing(true);
+                }
+              }}
               className="bg-green-500 rounded-lg px-4 py-3 flex-row items-center"
-              disabled={!isHydrated}
             >
               <MaterialIcons name={isEditing ? "save" : "edit"} size={16} color="black" />
               <Text className="text-black font-semibold ml-2">{isEditing ? "Save" : "Edit"}</Text>
