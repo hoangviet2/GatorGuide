@@ -36,7 +36,7 @@ export default function RoadmapPage() {
     name: "Jane Doe",
     gradeLevel: 11,
     intendedMajor: "Computer Science",
-    targetSchools: ["MIT", "Stanford"],
+    targetSchools: ["UW", "CWU"],
     completedCourses: ["Math 101", "English 101"],
     interests: ["Robotics Club", "Volunteer Work"],
   };
