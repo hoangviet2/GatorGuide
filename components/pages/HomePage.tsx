@@ -16,6 +16,7 @@ export default function HomePage() {
 
   const [searchQuery, setSearchQuery] = useState("");
   const [results, setResults] = useState<string[]>([]);
+  const [hasSubmittedSearch, setHasSubmittedSearch] = useState(false);
 
   const textClass = isDark ? "text-white" : "text-gray-900";
   const secondaryTextClass = isDark ? "text-gray-400" : "text-gray-600";
@@ -25,6 +26,9 @@ export default function HomePage() {
 
   const handleSearch = () => {
     if (!searchQuery.trim()) return;
+
+    setHasSubmittedSearch(true);
+
     setResults([
       "Massachusetts Institute of Technology (MIT)",
       "Stanford University",
@@ -33,6 +37,8 @@ export default function HomePage() {
       "University of California, Berkeley",
     ]);
   };
+
+  const showExtraInfoPrompt = !hasSubmittedSearch;
 
   return (
     <ScreenBackground>
@@ -73,6 +79,23 @@ export default function HomePage() {
 
             <Ionicons name="sparkles" size={18} color="#000" />
           </Pressable>
+
+          {showExtraInfoPrompt ? (
+            <View className={`${cardClass} border rounded-2xl p-4 mt-4`}>
+              <View className="flex-row items-start">
+                <View className="mt-0.5 mr-3">
+                  <Ionicons name="chatbubble-ellipses" size={18} color={placeholderTextColor} />
+                </View>
+
+                <View className="flex-1">
+                  <Text className={`${textClass} font-medium mb-1`}>Anything else?</Text>
+                  <Text className={`${secondaryTextClass} text-sm`}>
+                    Type anything you feel is relevant and hasn’t been answered elsewhere.
+                  </Text>
+                </View>
+              </View>
+            </View>
+          ) : null}
 
           {results.length > 0 && (
             <View className="mt-8">

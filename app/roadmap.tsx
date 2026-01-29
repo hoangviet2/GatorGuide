@@ -31,17 +31,17 @@ export default function RoadmapPage() {
 
           <View className="px-6 gap-4">
             <View className={`${cardBgClass} border rounded-2xl p-5`}>
-              <Text className={`${textClass} text-base mb-1`}>Next steps (placeholder)</Text>
+              <Text className={`${textClass} text-base mb-1`}>Potential spot to add API info</Text>
               <Text className={`${secondaryTextClass} text-sm`}>
-                Add your target university and major, then we’ll generate a semester-by-semester plan.
+                What API's do we have access to when it comes to the progress of their degree?
               </Text>
             </View>
 
             <View className={`${cardBgClass} border rounded-2xl overflow-hidden`}>
               {[
-                { title: "Pick target universities", body: "Start with 2–5 schools you’re considering." },
-                { title: "Confirm required courses", body: "Identify prerequisites and gen-ed requirements." },
-                { title: "Build extracurricular plan", body: "Choose activities aligned with major/career goals." },
+                { title: "placeholder1", body: "placeholder4" },
+                { title: "placeholder2", body: "placeholder5" },
+                { title: "placeholder", body: "placeholder6" },
               ].map((item, idx, arr) => (
                 <View
                   key={item.title}
