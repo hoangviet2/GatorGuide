@@ -1,43 +1,34 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { View, Text, TextInput, Pressable, ScrollView } from "react-native";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import { ScreenBackground } from "@/components/layouts/ScreenBackground";
 import { useAppTheme } from "@/hooks/use-app-theme";
-
-type User = {
-  name: string;
-  email: string;
-  major?: string;
-  gpa?: string;
-  testScores?: string;
-  resume?: string;
-  questionnaireAnswers?: Record<string, any>;
-};
+import { useAppData } from "@/hooks/use-app-data";
 
 export default function ProfilePage() {
   const { isDark } = useAppTheme();
+  const { isHydrated, state, updateUser } = useAppData();
 
-  const user: User = useMemo(
-    () => ({
-      name: "Student",
-      email: "student@example.com",
-      major: "",
-      gpa: "",
-      testScores: "",
-      resume: "",
-      questionnaireAnswers: {},
-    }),
-    []
-  );
+  const user = state.user;
 
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
-    major: user.major || "",
-    gpa: user.gpa || "",
-    testScores: user.testScores || "",
-    resume: user.resume || "",
+    major: "",
+    gpa: "",
+    testScores: "",
+    resume: "",
   });
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    setEditData({
+      major: user?.major ?? "",
+      gpa: user?.gpa ?? "",
+      testScores: user?.testScores ?? "",
+      resume: user?.resume ?? "",
+    });
+  }, [isHydrated, user?.major, user?.gpa, user?.testScores, user?.resume]);
 
   const textClass = isDark ? "text-white" : "text-gray-900";
   const secondaryTextClass = isDark ? "text-gray-400" : "text-gray-600";
@@ -46,10 +37,19 @@ export default function ProfilePage() {
   const borderClass = isDark ? "border-gray-800" : "border-gray-200";
   const placeholderColor = isDark ? "#9CA3AF" : "#6B7280";
 
-  const hasQuestionnaireData = !!user.questionnaireAnswers && Object.keys(user.questionnaireAnswers).length > 0;
+  const hasQuestionnaireData = useMemo(
+    () => Object.keys(state.questionnaireAnswers ?? {}).length > 0,
+    [state.questionnaireAnswers]
+  );
 
-  const handleSave = () => {
-    // later: persist to Firebase/store
+  const handleSave = async () => {
+    if (!user) return;
+    await updateUser({
+      major: editData.major,
+      gpa: editData.gpa,
+      testScores: editData.testScores,
+      resume: editData.resume,
+    });
     setIsEditing(false);
   };
 
@@ -67,6 +67,29 @@ export default function ProfilePage() {
     setEditData((p) => ({ ...p, resume: "resume.pdf" }));
   };
 
+  // If not signed in yet, show a simple prompt (prevents null crashes)
+  if (!user) {
+    return (
+      <ScreenBackground>
+        <View className="flex-1 items-center justify-center px-6">
+          <View className={`${cardBgClass} border rounded-2xl p-6 w-full max-w-md`}>
+            <Text className={`text-xl ${textClass} mb-2`}>Not signed in</Text>
+            <Text className={`${secondaryTextClass} mb-4`}>
+              Create an account or sign in to edit your profile.
+            </Text>
+            <Pressable
+              onPress={() => router.replace("/login")}
+              className="bg-green-500 rounded-lg py-4 items-center"
+              disabled={!isHydrated}
+            >
+              <Text className="text-black font-semibold">Go to Login</Text>
+            </Pressable>
+          </View>
+        </View>
+      </ScreenBackground>
+    );
+  }
+
   return (
     <ScreenBackground>
       <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 32 }}>
@@ -78,6 +101,7 @@ export default function ProfilePage() {
             <Pressable
               onPress={() => (isEditing ? handleSave() : setIsEditing(true))}
               className="bg-green-500 rounded-lg px-4 py-3 flex-row items-center"
+              disabled={!isHydrated}
             >
               <MaterialIcons name={isEditing ? "save" : "edit"} size={16} color="black" />
               <Text className="text-black font-semibold ml-2">{isEditing ? "Save" : "Edit"}</Text>

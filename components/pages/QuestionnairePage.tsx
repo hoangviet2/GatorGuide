@@ -1,9 +1,10 @@
-import React, { useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { View, Text, TextInput, Pressable, ScrollView } from "react-native";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import { ScreenBackground } from "@/components/layouts/ScreenBackground";
 import { useAppTheme } from "@/hooks/use-app-theme";
+import { useAppData } from "@/hooks/use-app-data";
 
 type Question =
   | { id: string; question: string; type: "text" | "textarea"; placeholder: string }
@@ -11,6 +12,7 @@ type Question =
 
 export default function QuestionnairePage() {
   const { isDark } = useAppTheme();
+  const { isHydrated, state, setQuestionnaireAnswers } = useAppData();
 
   const questions = useMemo<Question[]>(
     () => [
@@ -78,12 +80,19 @@ export default function QuestionnairePage() {
     []
   );
 
-  const [currentStep, setCurrentStep] = useState(0);
-  const [answers, setAnswers] = useState<Record<string, string>>(() => {
+  const blankAnswers = useMemo(() => {
     const init: Record<string, string> = {};
     for (const q of questions) init[q.id] = "";
     return init;
-  });
+  }, [questions]);
+
+  const [currentStep, setCurrentStep] = useState(0);
+  const [answers, setAnswers] = useState<Record<string, string>>(() => blankAnswers);
+
+  useEffect(() => {
+    if (!isHydrated) return;
+    setAnswers({ ...blankAnswers, ...(state.questionnaireAnswers ?? {}) });
+  }, [isHydrated, blankAnswers, state.questionnaireAnswers]);
 
   const currentQuestion = questions[currentStep];
   const progress = Math.round(((currentStep + 1) / questions.length) * 100);
@@ -98,13 +107,13 @@ export default function QuestionnairePage() {
 
   const handleAnswer = (id: string, value: string) => setAnswers((p) => ({ ...p, [id]: value }));
 
-  const handleNext = () => {
+  const handleNext = async () => {
     if (currentStep < questions.length - 1) {
       setCurrentStep((s) => s + 1);
       return;
     }
-    // later: persist answers (AsyncStorage/Firebase)
-    router.replace("/(tabs)");
+    await setQuestionnaireAnswers(answers);
+    router.back(); // returns to Profile (or wherever you came from)
   };
 
   const handleBack = () => {
@@ -193,7 +202,11 @@ export default function QuestionnairePage() {
 
               {/* Footer */}
               <View className={`mt-6 pt-6 border-t ${borderClass}`}>
-                <Pressable onPress={handleNext} className="w-full bg-green-500 rounded-lg py-4 items-center">
+                <Pressable
+                  onPress={handleNext}
+                  className={`w-full bg-green-500 rounded-lg py-4 items-center ${!isHydrated ? "opacity-60" : ""}`}
+                  disabled={!isHydrated}
+                >
                   <Text className="text-black font-semibold">
                     {currentStep === questions.length - 1 ? "Complete" : "Next"}
                   </Text>
