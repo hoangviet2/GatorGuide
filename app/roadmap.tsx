@@ -1,9 +1,27 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { View, Text, Pressable, ScrollView, TextInput } from "react-native";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import { ScreenBackground } from "@/components/layouts/ScreenBackground";
 import { useAppTheme } from "@/hooks/use-app-theme";
+
+interface Task {
+  id: string;
+  title: string;
+  description: string;
+  completed: boolean;
+  notes: string;
+  expanded: boolean;
+}
+
+interface StudentProfile {
+  name: string;
+  gradeLevel: number;
+  intendedMajor: string;
+  targetSchools: string[];
+  completedCourses: string[];
+  interests: string[];
+}
 
 export default function RoadmapPage() {
   const { isDark } = useAppTheme();
@@ -13,32 +31,55 @@ export default function RoadmapPage() {
   const cardBgClass = isDark ? "bg-gray-900/80 border-gray-800" : "bg-white/90 border-gray-200";
   const borderClass = isDark ? "border-gray-800" : "border-gray-200";
 
-  const [tasks, setTasks] = useState([
-    {
-      id: "1",
-      title: "Complete Math 101",
-      description: "Finish all assignments and exams for Math 101.",
+  // Mocked student profile for now
+  const studentProfile: StudentProfile = {
+    name: "Jane Doe",
+    gradeLevel: 11,
+    intendedMajor: "Computer Science",
+    targetSchools: ["MIT", "Stanford"],
+    completedCourses: ["Math 101", "English 101"],
+    interests: ["Robotics Club", "Volunteer Work"],
+  };
+
+  // Generate personalized tasks from student profile
+  const generateTasks = (profile: StudentProfile): Task[] => {
+    const courseTasks: Task[] = profile.completedCourses.map((course) => ({
+      id: `course-${course}`,
+      title: `Complete ${course}`,
+      description: `Finish all assignments and exams for ${course}.`,
+      completed: true,
+      notes: "",
+      expanded: false,
+    }));
+
+    const appTask: Task = {
+      id: "submit-applications",
+      title: `Submit applications for ${profile.targetSchools.join(", ")}`,
+      description: "Submit your college applications before the deadlines.",
       completed: false,
       notes: "",
       expanded: false,
-    },
-    {
-      id: "2",
-      title: "Submit Application",
-      description: "Submit your college application before the deadline.",
+    };
+
+    const interestTasks: Task[] = profile.interests.map((interest, idx) => ({
+      id: `interest-${idx}`,
+      title: `Join ${interest}`,
+      description: `Participate in ${interest} activities.`,
       completed: false,
       notes: "",
       expanded: false,
-    },
-    {
-      id: "3",
-      title: "Join Student Club",
-      description: "Participate in at least one extracurricular club.",
-      completed: false,
-      notes: "",
-      expanded: false,
-    },
-  ]);
+    }));
+
+    return [...courseTasks, appTask, ...interestTasks];
+  };
+
+  const [tasks, setTasks] = useState<Task[]>([]);
+
+  // Generate tasks on mount
+  useEffect(() => {
+    const personalizedTasks = generateTasks(studentProfile);
+    setTasks(personalizedTasks);
+  }, []);
 
   const toggleCompleted = (id: string) => {
     setTasks((prev) =>
@@ -79,8 +120,18 @@ export default function RoadmapPage() {
 
             <Text className={`text-2xl ${textClass}`}>Roadmap</Text>
             <Text className={`${secondaryTextClass} mt-2`}>
-              This page will become your transfer plan checklist (courses, deadlines, activities).
+              This page will become your personalized transfer plan checklist.
             </Text>
+          </View>
+
+          {/* AI Assistant Placeholder */}
+          <View className="px-6 mb-4">
+            <View className={`${cardBgClass} border rounded-2xl p-5`}>
+              <Text className={`${textClass} text-base mb-1`}>Personal AI Assistant</Text>
+              <Text className={`${secondaryTextClass} text-sm`}>
+                PLACEHOLDER: Your personal assistant will appear here once connected.
+              </Text>
+            </View>
           </View>
 
           {/* Task List */}
