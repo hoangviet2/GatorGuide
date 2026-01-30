@@ -104,8 +104,10 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
           email: u.email,
           major: "",
           gpa: "",
-          testScores: "",
+          sat: "",
+          act: "",
           resume: "",
+          transcript: "",
         },
       };
     });

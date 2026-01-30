@@ -3,7 +3,7 @@ import { View, Text, TextInput, Pressable, ScrollView, Keyboard, Dimensions } fr
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { Audio } from "expo-av";
+import { useAudioPlayer } from "expo-audio";
 import ConfettiCannon from "react-native-confetti-cannon";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScreenBackground } from "@/components/layouts/ScreenBackground";
@@ -19,6 +19,9 @@ export default function ProfilePage() {
   const { isDark } = useAppTheme();
   const { isHydrated, state, updateUser, setQuestionnaireAnswers } = useAppData();
   const insets = useSafeAreaInsets();
+
+  // Initialize audio player for celebration sound
+  const cheerPlayer = useAudioPlayer('https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3');
 
   const user = state.user;
 
@@ -168,10 +171,7 @@ export default function ProfilePage() {
           setTimeout(() => setConfettiCooldown(false), 1000);
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
           // Play cheer sound
-          Audio.Sound.createAsync(
-            { uri: 'https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3' },
-            { shouldPlay: true }
-          ).catch(() => {});
+          cheerPlayer.play();
         } else if (value !== "4" && isConfettiPlaying) {
           setIsConfettiPlaying(false);
         }

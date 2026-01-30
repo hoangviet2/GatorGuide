@@ -2,9 +2,11 @@
 
 ## Project Overview
 
-GatorGuide is a React Native/Expo app built with TypeScript, NativeWind (Tailwind for React Native), and Expo Router. The app helps students find college matches and manage their academic profile. It uses file-based routing and context-based state management for user data and theme persistence.
+GatorGuide is a React Native/Expo mobile app built with TypeScript, NativeWind (Tailwind for React Native), and Expo Router. The app helps students find college matches and manage their academic profile. It uses file-based routing and context-based state management for user data and theme persistence.
 
 **Tech Stack:** Expo 54, React 19, React Native 0.81, TypeScript 5.9, NativeWind 4.2, Expo Router 6, AsyncStorage
+
+**Key Decision:** This project uses a **stub-first architecture** for all external APIs, allowing full UI development without API keys or internet connection. Switch to real APIs by setting environment variables (see Services Layer section).
 
 ## Architecture
 
@@ -27,13 +29,16 @@ Both custom providers handle hydration (`isHydrated`/`hydrated` states) to preve
 - **AppThemeProvider** stores theme preference in AsyncStorage with key `app-theme` with values `"light" | "dark" | "system"`
 - **Color scheme** (`hooks/use-color-scheme.ts`): Platform-native hook that detects system dark/light mode preference
 - **Hydration timing:** AppDataProvider resolves in ~5-50ms; always check `isHydrated` before accessing `state` in routes
+- **State persistence:** Both providers auto-save to AsyncStorage on state change (after initial hydration). Updates are async but non-blocking.
+- **Notifications state:** `notificationsEnabled` boolean stored in AppDataState, toggled via `setNotificationsEnabled()`
 
 ### Styling Approach
-- **NativeWind + Tailwind**: All styling uses Tailwind utility classes (`className` prop)
+- **NativeWind + Tailwind**: All styling uses Tailwind utility classes (`className` prop) - NO StyleSheet.create()
 - **Theme colors defined in** `constants/theme.ts`: Colors export with light/dark variants
 - **Theme-aware components**: Components read `isDark` from `useAppTheme()` hook and apply conditional classes like `isDark ? "text-white" : "text-gray-900"`
 - **ScreenBackground**: Reusable gradient wrapper (`components/layouts/ScreenBackground.tsx`) with LinearGradient effect based on theme
-- **Global CSS** (`global.css`): Imports Tailwind directives only
+- **Global CSS** (`global.css`): Imports Tailwind directives only - imported once in `app/_layout.tsx`
+- **No inline styles**: Prefer Tailwind classes over `style` prop; if dynamic styling needed, compute className strings
 
 ## Key Conventions
 
@@ -71,7 +76,9 @@ type User = {
 };
 ```
 
-Update user fields via `updateUser(patch)` from `useAppData()` hook. Test scores are stored separately as `sat` and `act` fields, not combined.
+Update user fields via `updateUser(patch)` from `useAppData()` hook. Test scores stored as separate `sat` and `act` string fields (not combined).
+
+**Critical:** When creating new users in `signIn()`, initialize ALL optional fields to empty strings (`""`) to prevent controlled/uncontrolled component warnings in forms.
 
 ### Theme Integration
 Always use theme context when applying colors/styles:
@@ -90,6 +97,13 @@ npx expo start
 ```
 Then choose: `a` (Android), `i` (iOS), `w` (Web), or scan QR for Expo Go.
 
+**Platform-specific commands:**
+```bash
+npm run android  # Launch Android emulator
+npm run ios      # Launch iOS simulator
+npm run web      # Start web dev server
+```
+
 ### Lint Code
 ```bash
 npm run lint
@@ -100,11 +114,12 @@ Uses expo-lint config based on ESLint v9 flat config (`eslint.config.js`).
 ```bash
 npm run reset-project
 ```
-Moves starter code to `app-example/` and creates fresh `app/` directory.
+Moves starter code to `app-example/` and creates fresh `app/` directory. **Warning:** This is destructive!
 
 ### Build Configuration
 - **Metro bundler:** Configured in `metro.config.js` with NativeWind integration via `withNativeWind()`
 - **Global CSS:** All Tailwind styles loaded through `global.css` (imported in `app/_layout.tsx`)
+- **Tailwind content paths:** Configured in `tailwind.config.js` to scan `app/`, `components/`, and `src/` directories
 
 ## Critical Integration Points
 
@@ -118,6 +133,7 @@ Moves starter code to `app-example/` and creates fresh `app/` directory.
 - Import from `expo-router`: `import { router } from "expo-router"`
 - Guards: Auth check happens in `app/index.tsx` before tabs are accessible
 - Navigation pattern: Routes redirect based on auth state after hydration (see `app/index.tsx` and `app/(tabs)/_layout.tsx`)
+- **Double navigation prevention:** Use `useRef` flag (`hasNavigated`) in `app/index.tsx` to prevent navigation loops in StrictMode/Fast Refresh
 
 ### Icons
 - Primary: `@expo/vector-icons` (Ionicons, MaterialIcons): `import { Ionicons, MaterialIcons } from "@expo/vector-icons"`
@@ -129,35 +145,47 @@ Moves starter code to `app-example/` and creates fresh `app/` directory.
 - Uses `expo-haptics` for platform-native feedback (iOS only via `process.env.EXPO_OS === 'ios'` check)
 - Pattern: `Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)` in onPressIn handler
 
+### Special Effects & Media
+- **Confetti animation:** `react-native-confetti-cannon` used in ProfilePage for milestone celebrations (ref-based trigger)
+- **Audio playback:** `expo-audio` (`useAudioPlayer` hook) for sound effects; initialize player at component level, then call `player.play()` as needed
+- **Pattern:** Use cooldown flags (e.g., `confettiCooldown` state) to prevent rapid re-triggering of animations
+- **Ref management:** Confetti ref typed as `any` due to library type limitations
+- **Note:** `expo-notifications` has limited functionality in Expo Go; use development builds for full push notification support
+
 ### Services Layer (`services/` directory)
 All API integrations are centralized in the `services/` folder with a **stub-first approach**:
 - **Stub Mode (default):** All services return mock data immediately; no API calls are made. This allows UI development without API keys or internet.
 - **Configuration:** `services/config.ts` manages API keys via env vars (`EXPO_PUBLIC_USE_STUB_DATA`, `EXPO_PUBLIC_FIREBASE_API_KEY`, etc.)
+- **Stub detection:** `isStubMode()` returns true if `EXPO_PUBLIC_USE_STUB_DATA !== 'false'` OR if Firebase API key is `'STUB'`
 - **Services available:**
-  - `authService` - Firebase Authentication (stub: returns mock user)
+  - `authService` - Firebase Authentication (stub: returns mock user immediately)
   - `collegeService` - College Scorecard API (stub: returns 3 mock Florida colleges)
   - `aiService` - Google Gemini chat (stub: returns canned keyword-based responses)
   - `storageService` - Firebase Storage for resume/transcript uploads (stub: saves to AsyncStorage)
+  - `notificationsService` - Push notifications (stub: logs to console)
 - **Import pattern:** Use barrel export: `import { authService, collegeService } from '@/services'`
-- **Switching to real APIs:** Set `EXPO_PUBLIC_USE_STUB_DATA=false` in env, add real API keys, follow setup in `services/README.md`
-- **Design principle:** Services abstract API details; UI code never knows if it's calling stub or real API
+- **Switching to real APIs:** Set `EXPO_PUBLIC_USE_STUB_DATA=false` in env, add real API keys, follow setup in [services/README.md](services/README.md)
+- **Design principle:** Services abstract API details; UI code never knows if it's calling stub or real API. All services return Promises for consistency.
 
 ## Common Patterns to Follow
 
-1. **Export types explicitly** for data structures (User, AppDataState, QuestionnaireAnswers)
-2. **Use `useCallback` in context providers** for memoized action functions
-3. **Separate concerns**: hooks for logic, components for UI, pages for screen-specific composition
-4. **Always unsubscribe/cleanup**: useEffect in providers returns cleanup functions to prevent memory leaks
+1. **Export types explicitly** for data structures (User, AppDataState, QuestionnaireAnswers) from provider hooks
+2. **Use `useCallback` in context providers** for memoized action functions to prevent unnecessary re-renders
+3. **Separate concerns**: hooks for logic/state, components for UI, pages for screen-specific composition
+4. **Always unsubscribe/cleanup**: useEffect in providers returns cleanup functions to prevent memory leaks (check `mounted` flag)
 5. **Theme-aware class names**: Prefer computed class strings over inline ternaries for readability
 6. **Questionnaire answers stored as** `Record<string, string>` for flexible form handling
 7. **Input validation patterns**: Use regex tests and type guards (e.g., GPA validation with `/^\d*\.?\d*$/` and `num <= 4.0`)
 8. **Conditional rendering for auth**: Pages that require user data should return fallback UI if `!user`, not null (prevents crashes)
 9. **Use `useMemo`** for derived state calculations (e.g., checking if questionnaire data exists: `useMemo(() => Object.keys(state.questionnaireAnswers ?? {}).length > 0, [state.questionnaireAnswers])`)
-10. **Always provide sensible defaults** in TextInput and form fields to prevent uncontrolled/controlled component warnings
-11. **Multi-step forms pattern**: Use local state for step tracking (see `ProfileSetupPage.tsx`); progress indicators use conditional `bg-green-500` vs `bg-gray-200`/`bg-gray-800` classes
-12. **File picking stubs**: Document pickers (resume/transcript) currently use placeholder implementations pending full `expo-document-picker` integration
-13. **Auth guard pattern**: Both `app/index.tsx` and `app/(tabs)/_layout.tsx` implement hydration + auth checks. Index routes to profile-setup if user lacks profile completion (checks for `major` or `gpa` fields), else routes to tabs. Tabs layout guards against direct deep linking by redirecting unauthenticated users to login.
-14. **User data schema includes transcript field**: User type has both `resume?: string` and `transcript?: string` for file references (not shown in older docs but exists in the actual type)
+10. **Always provide sensible defaults** in TextInput and form fields (empty string `""`, not `undefined`) to prevent uncontrolled/controlled component warnings
+11. **Multi-step forms pattern**: Use local state for step tracking (see [ProfileSetupPage.tsx](components/pages/ProfileSetupPage.tsx)); progress indicators use conditional `bg-green-500` vs `bg-gray-200`/`bg-gray-800` classes
+12. **Haptic feedback pattern**: iOS-only feature via `process.env.EXPO_OS === 'ios'` check before calling `Haptics.impactAsync()`
+13. **Auth guard pattern**: Both [app/index.tsx](app/index.tsx) and [app/(tabs)/_layout.tsx](app/(tabs)/_layout.tsx) implement hydration + auth checks. Index routes to profile-setup if user lacks profile completion (checks for `major` or `gpa` fields), else routes to tabs. Tabs layout guards against direct deep linking by redirecting unauthenticated users to login.
+14. **User initialization**: When creating users in `signIn()`, initialize ALL optional fields (`major`, `gpa`, `sat`, `act`, `resume`, `transcript`) to empty strings to prevent form bugs
+15. **Component props pattern**: Reusable UI components (like `FormInput`, `ProfileField`) accept theme-aware class name props (`textClass`, `inputBgClass`, etc.) instead of consuming theme context directly - keeps them flexible and testable
+16. **Path aliases**: TypeScript configured with `@/*` alias mapping to workspace root (see `tsconfig.json`); always use for imports: `import { useAppData } from "@/hooks/use-app-data"`
+17. **Error handling in services**: All service methods return Promises; stub implementations simulate network delays (200-500ms) for realistic UX testing; errors thrown with descriptive messages when real APIs not configured
 
 ## Files to Reference
 
