@@ -9,8 +9,19 @@ export default function Index() {
 
   useEffect(() => {
     if (!isHydrated) return;
-    if (state.user) router.replace("/(tabs)");
-    else router.replace("/login");
+    
+    if (state.user) {
+      // Check if user has completed profile setup
+      const hasCompletedSetup = state.user.major || state.user.gpa;
+      
+      if (hasCompletedSetup) {
+        router.replace("/(tabs)");
+      } else {
+        router.replace("/profile-setup");
+      }
+    } else {
+      router.replace("/login");
+    }
   }, [isHydrated, state.user]);
 
   if (!isHydrated) {

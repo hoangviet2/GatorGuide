@@ -1,6 +1,6 @@
 // components/pages/ForgotPasswordPage.tsx
 import { useMemo, useState } from "react";
-import { View, Text, Pressable, Alert } from "react-native";
+import { View, Text, Pressable, Alert, Keyboard, TouchableWithoutFeedback } from "react-native";
 import { router } from "expo-router";
 import { FontAwesome5, MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -67,8 +67,9 @@ export default function ForgotPasswordPage() {
 
   return (
     <ScreenBackground>
-      <View className="flex-1 px-6 py-8">
-        <View className="w-full max-w-md self-center">
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View className="flex-1 px-6 py-8">
+          <View className="w-full max-w-md self-center">
           <Pressable
             onPress={() => {
               Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
@@ -118,8 +119,9 @@ export default function ForgotPasswordPage() {
               </Pressable>
             </View>
           </View>
+          </View>
         </View>
-      </View>
+      </TouchableWithoutFeedback>
     </ScreenBackground>
   );
 }

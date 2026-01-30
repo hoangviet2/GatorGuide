@@ -6,7 +6,8 @@ export type User = {
   email: string;
   major?: string;
   gpa?: string;
-  testScores?: string;
+  sat?: string;
+  act?: string;
   resume?: string; // store a filename or local URI later
   transcript?: string; // store a filename or local URI later
 };
@@ -16,6 +17,7 @@ export type QuestionnaireAnswers = Record<string, string>;
 export type AppDataState = {
   user: User | null;
   questionnaireAnswers: QuestionnaireAnswers;
+  notificationsEnabled: boolean;
 };
 
 const STORAGE_KEY = "gatorguide:appdata:v1";
@@ -23,6 +25,7 @@ const STORAGE_KEY = "gatorguide:appdata:v1";
 const initialState: AppDataState = {
   user: null,
   questionnaireAnswers: {},
+  notificationsEnabled: true,
 };
 
 type AppDataContextValue = {
@@ -35,6 +38,7 @@ type AppDataContextValue = {
   updateUser: (patch: Partial<User>) => Promise<void>;
 
   setQuestionnaireAnswers: (answers: QuestionnaireAnswers) => Promise<void>;
+  setNotificationsEnabled: (enabled: boolean) => Promise<void>;
   clearAll: () => Promise<void>;
 };
 
@@ -58,6 +62,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
           setState({
             user: parsed.user ?? null,
             questionnaireAnswers: parsed.questionnaireAnswers ?? {},
+            notificationsEnabled: parsed.notificationsEnabled ?? true,
           });
         }
       } catch {
@@ -79,18 +84,31 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
   }, [isHydrated, state]);
 
   const signIn = useCallback(async (u: Pick<User, "name" | "email">) => {
-    setState((prev) => ({
-      ...prev,
-      user: {
-        name: u.name,
-        email: u.email,
-        // keep any previously saved profile fields if re-signing in
-        major: prev.user?.major ?? "",
-        gpa: prev.user?.gpa ?? "",
-        testScores: prev.user?.testScores ?? "",
-        resume: prev.user?.resume ?? "",
-      },
-    }));
+    setState((prev) => {
+      // If user already exists with same email, preserve all their data
+      if (prev.user && prev.user.email === u.email) {
+        return {
+          ...prev,
+          user: {
+            ...prev.user,
+            name: u.name, // Update name in case it changed
+          },
+        };
+      }
+      
+      // New user - create fresh profile
+      return {
+        ...prev,
+        user: {
+          name: u.name,
+          email: u.email,
+          major: "",
+          gpa: "",
+          testScores: "",
+          resume: "",
+        },
+      };
+    });
   }, []);
 
   const signOut = useCallback(async () => {
@@ -114,6 +132,13 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
     }));
   }, []);
 
+  const setNotificationsEnabled = useCallback(async (enabled: boolean) => {
+    setState((prev) => ({
+      ...prev,
+      notificationsEnabled: enabled,
+    }));
+  }, []);
+
   const clearAll = useCallback(async () => {
     await AsyncStorage.removeItem(STORAGE_KEY).catch(() => {});
     setState(initialState);
@@ -127,9 +152,10 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       signOut,
       updateUser,
       setQuestionnaireAnswers,
+      setNotificationsEnabled,
       clearAll,
     }),
-    [isHydrated, state, signIn, signOut, updateUser, setQuestionnaireAnswers, clearAll]
+    [isHydrated, state, signIn, signOut, updateUser, setQuestionnaireAnswers, setNotificationsEnabled, clearAll]
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

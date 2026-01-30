@@ -5,7 +5,9 @@ import { useAppTheme } from "@/hooks/use-app-theme";
 import { MaterialIcons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { useMemo, useState } from "react";
-import { Pressable, ScrollView, Text, View } from "react-native";
+import { Pressable, ScrollView, Text, View, Alert } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { notificationsService } from "@/services";
 
 type SettingsItem =
   | {
@@ -25,16 +27,40 @@ type SettingsItem =
 
 export default function SettingsPage() {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
-  const [isNotificationsEnabled, setIsNotificationsEnabled] = useState(true);
   const [selectedLanguage] = useState("English");
 
   const { theme, setTheme, isDark } = useAppTheme();
-  const { isHydrated, signOut, clearAll } = useAppData();
+  const { isHydrated, state, signOut, clearAll, setNotificationsEnabled } = useAppData();
+  const insets = useSafeAreaInsets();
 
   const textClass = isDark ? "text-white" : "text-gray-900";
   const secondaryTextClass = isDark ? "text-gray-400" : "text-gray-600";
   const cardBgClass = isDark ? "bg-gray-900/80 border-gray-800" : "bg-white/90 border-gray-200";
   const cardBorderClass = isDark ? "border-gray-800" : "border-gray-200";
+
+  const handleToggleNotifications = async () => {
+    const currentStatus = state.notificationsEnabled;
+    
+    if (!currentStatus) {
+      // User is trying to enable notifications - request permission
+      const permissionStatus = await notificationsService.requestPermissions();
+      
+      if (permissionStatus === 'granted') {
+        await setNotificationsEnabled(true);
+        notificationsService.configureNotificationHandler();
+      } else if (permissionStatus === 'denied') {
+        Alert.alert(
+          'Permission Denied',
+          'Notification permissions were denied. You can enable them in your device settings.',
+          [{ text: 'OK' }]
+        );
+      }
+    } else {
+      // User is disabling notifications
+      await setNotificationsEnabled(false);
+      await notificationsService.cancelAllNotifications();
+    }
+  };
 
   const sections = useMemo(
     () => [
@@ -45,8 +71,8 @@ export default function SettingsPage() {
             icon: "notifications",
             label: "Notifications",
             type: "toggle",
-            enabled: isNotificationsEnabled,
-            onPress: () => setIsNotificationsEnabled((v) => !v),
+            enabled: state.notificationsEnabled,
+            onPress: handleToggleNotifications,
           },
           {
             icon: "dark-mode",
@@ -71,11 +97,10 @@ export default function SettingsPage() {
         title: "Support",
         items: [
           { icon: "info", label: "About", type: "nav", onPress: () => router.push("/about") },
-          { icon: "map", label: "Roadmap", type: "nav", onPress: () => router.push("/roadmap") },
         ] as SettingsItem[],
       },
     ],
-    [theme, isNotificationsEnabled, selectedLanguage, setTheme]
+    [theme, state.notificationsEnabled, selectedLanguage, setTheme, handleToggleNotifications]
   );
 
   const handleLogout = async () => {
@@ -124,7 +149,7 @@ export default function SettingsPage() {
 
   return (
     <ScreenBackground>
-      <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+      <ScrollView contentContainerStyle={{ paddingTop: insets.top, paddingBottom: 32 }}>
         <View className="max-w-md w-full self-center">
           <View className="px-6 pt-8 pb-6">
             <Text className={`text-2xl ${textClass}`}>Settings</Text>

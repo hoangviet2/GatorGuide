@@ -43,6 +43,12 @@ export default function TabLayout() {
         tabBarStyle: {
           backgroundColor: isDark ? "#000000" : "#FFFFFF",
           borderTopColor: isDark ? "#1F2937" : "#E5E7EB",
+          borderTopWidth: 1,
+          elevation: 0,
+          shadowOpacity: 0,
+        },
+        safeAreaInsets: {
+          top: 0,
         },
       }}
     >

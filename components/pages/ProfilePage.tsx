@@ -1,8 +1,11 @@
-import { useEffect, useMemo, useState } from "react";
-import { View, Text, TextInput, Pressable, ScrollView } from "react-native";
+import { useEffect, useMemo, useRef, useState } from "react";
+import { View, Text, TextInput, Pressable, ScrollView, Keyboard, Dimensions } from "react-native";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { Audio } from "expo-av";
+import ConfettiCannon from "react-native-confetti-cannon";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScreenBackground } from "@/components/layouts/ScreenBackground";
 import { useAppTheme } from "@/hooks/use-app-theme";
 import { useAppData } from "@/hooks/use-app-data";
@@ -15,19 +18,26 @@ type Question =
 export default function ProfilePage() {
   const { isDark } = useAppTheme();
   const { isHydrated, state, updateUser, setQuestionnaireAnswers } = useAppData();
+  const insets = useSafeAreaInsets();
 
   const user = state.user;
 
   const [isEditing, setIsEditing] = useState(false);
   const [editData, setEditData] = useState({
+    name: "",
     major: "",
     gpa: "",
-    testScores: "",
+    sat: "",
+    act: "",
     resume: "",
   });
 
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
   const [questionnaireAnswers, setLocalAnswers] = useState<Record<string, string>>({});
+  const [isConfettiPlaying, setIsConfettiPlaying] = useState(false);
+  const [confettiCooldown, setConfettiCooldown] = useState(false);
+
+  const confettiRef = useRef<any>(null);
 
   const questions = useMemo<Question[]>(
     () => [
@@ -104,13 +114,15 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!isHydrated) return;
     setEditData({
+      name: user?.name ?? "",
       major: user?.major ?? "",
       gpa: user?.gpa ?? "",
-      testScores: user?.testScores ?? "",
+      sat: user?.sat ?? "",
+      act: user?.act ?? "",
       resume: user?.resume ?? "",
     });
     setLocalAnswers({ ...blankAnswers, ...(state.questionnaireAnswers ?? {}) });
-  }, [isHydrated, user?.major, user?.gpa, user?.testScores, user?.resume, blankAnswers, state.questionnaireAnswers]);
+  }, [isHydrated, user?.name, user?.major, user?.gpa, user?.sat, user?.act, user?.resume, blankAnswers, state.questionnaireAnswers]);
 
   const textClass = isDark ? "text-white" : "text-gray-900";
   const secondaryTextClass = isDark ? "text-gray-400" : "text-gray-600";
@@ -125,12 +137,19 @@ export default function ProfilePage() {
     [state.questionnaireAnswers]
   );
 
+  const capitalizeWords = (text: string | undefined) => {
+    if (!text) return "";
+    return text.split(' ').map(word => word.charAt(0).toUpperCase() + word.slice(1).toLowerCase()).join(' ');
+  };
+
   const handleSave = () => {
     if (!user) return;
     updateUser({
+      name: editData.name,
       major: editData.major,
       gpa: editData.gpa,
-      testScores: editData.testScores,
+      sat: editData.sat,
+      act: editData.act,
       resume: editData.resume,
     });
     setIsEditing(false);
@@ -141,6 +160,21 @@ export default function ProfilePage() {
       const num = parseFloat(value);
       if (value === "" || value === "0" || value === "0." || (Number.isFinite(num) && num <= 4.0)) {
         setEditData((p) => ({ ...p, gpa: value }));
+        // Celebrate perfect GPA! 🎉
+        if (num === 4.0 && value === "4" && !confettiCooldown) {
+          setIsConfettiPlaying(true);
+          setConfettiCooldown(true);
+          setTimeout(() => setIsConfettiPlaying(false), 6000);
+          setTimeout(() => setConfettiCooldown(false), 1000);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          // Play cheer sound
+          Audio.Sound.createAsync(
+            { uri: 'https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3' },
+            { shouldPlay: true }
+          ).catch(() => {});
+        } else if (value !== "4" && isConfettiPlaying) {
+          setIsConfettiPlaying(false);
+        }
       }
     }
   };
@@ -183,8 +217,14 @@ export default function ProfilePage() {
   }
 
   return (
-    <ScreenBackground>
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 32 }}>
+    <>
+      <ScreenBackground>
+      <ScrollView
+        className="flex-1"
+        contentContainerStyle={{ paddingTop: insets.top, paddingBottom: 32 }}
+        keyboardShouldPersistTaps="handled"
+        onScrollBeginDrag={Keyboard.dismiss}
+      >
         <View className="max-w-md w-full self-center">
           {/* Header */}
           <View className="px-6 pt-8 pb-6 flex-row items-center justify-between">
@@ -214,11 +254,27 @@ export default function ProfilePage() {
                   <Text className="text-black text-2xl font-bold">{user.name.charAt(0).toUpperCase()}</Text>
                 </View>
 
-                <View>
-                  <Text className={`text-xl ${textClass}`}>{user.name}</Text>
+                <View className="flex-1">
                   <Text className={secondaryTextClass}>{user.email}</Text>
                 </View>
               </View>
+
+              <ProfileField
+                type="text"
+                icon="person"
+                label="Name"
+                value={capitalizeWords(user.name)}
+                isEditing={isEditing}
+                editValue={editData.name}
+                onChangeText={(t) => setEditData((p) => ({ ...p, name: t }))}
+                placeholder="Enter your name"
+                placeholderColor={placeholderColor}
+                inputBgClass={inputBgClass}
+                inputClass={inputClass}
+                textClass={textClass}
+                secondaryTextClass={secondaryTextClass}
+                borderClass={borderClass}
+              />
 
               <ProfileField
                 type="display"
@@ -235,7 +291,7 @@ export default function ProfilePage() {
                 type="text"
                 icon="school"
                 label="Major"
-                value={user.major}
+                value={capitalizeWords(user.major) || "Undecided"}
                 isEditing={isEditing}
                 editValue={editData.major}
                 onChangeText={(t) => setEditData((p) => ({ ...p, major: t }))}
@@ -269,12 +325,29 @@ export default function ProfilePage() {
               <ProfileField
                 type="text"
                 icon="notes"
-                label="Test Scores"
-                value={user.testScores}
+                label="SAT Score"
+                value={user.sat}
                 isEditing={isEditing}
-                editValue={editData.testScores}
-                onChangeText={(t) => setEditData((p) => ({ ...p, testScores: t }))}
-                placeholder="e.g., SAT: 1450"
+                editValue={editData.sat}
+                onChangeText={(t) => setEditData((p) => ({ ...p, sat: t }))}
+                placeholder="e.g., 1450"
+                placeholderColor={placeholderColor}
+                inputBgClass={inputBgClass}
+                inputClass={inputClass}
+                textClass={textClass}
+                secondaryTextClass={secondaryTextClass}
+                borderClass={borderClass}
+              />
+
+              <ProfileField
+                type="text"
+                icon="notes"
+                label="ACT Score"
+                value={user.act}
+                isEditing={isEditing}
+                editValue={editData.act}
+                onChangeText={(t) => setEditData((p) => ({ ...p, act: t }))}
+                placeholder="e.g., 32"
                 placeholderColor={placeholderColor}
                 inputBgClass={inputBgClass}
                 inputClass={inputClass}
@@ -407,5 +480,17 @@ export default function ProfilePage() {
         </View>
       </ScrollView>
     </ScreenBackground>
+    {isConfettiPlaying && (
+      <ConfettiCannon
+        key="confetti"
+        ref={confettiRef}
+        count={150}
+        origin={{ x: Dimensions.get('window').width / 2, y: -10 }}
+        autoStart={true}
+        fadeOut={true}
+        fallSpeed={3000}
+      />
+    )}
+    </>
   );
 }

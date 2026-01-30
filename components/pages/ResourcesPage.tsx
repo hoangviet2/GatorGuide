@@ -1,6 +1,7 @@
 import React, { useMemo, useState } from "react";
 import { Alert, Linking, Pressable, ScrollView, Text, TextInput, View } from "react-native";
 import { Ionicons, MaterialIcons } from "@expo/vector-icons";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScreenBackground } from "@/components/layouts/ScreenBackground";
 import { useThemeStyles } from "@/hooks/use-theme-styles";
 
@@ -19,6 +20,7 @@ type ResourceSection = {
 
 export default function ResourcesPage() {
   const styles = useThemeStyles();
+  const insets = useSafeAreaInsets();
   const [query, setQuery] = useState("");
 
   const { textClass, secondaryTextClass, borderClass, placeholderColor } = styles;
@@ -290,7 +292,7 @@ export default function ResourcesPage() {
 
   return (
     <ScreenBackground>
-      <ScrollView className="flex-1" contentContainerStyle={{ paddingBottom: 96 }}>
+      <ScrollView className="flex-1" contentContainerStyle={{ paddingTop: insets.top, paddingBottom: 96 }}>
         <View className="max-w-md w-full self-center px-6 pt-10">
           <Text className={`text-2xl ${textClass} mb-1`}>Resources</Text>
           <Text className={`${secondaryTextClass} mb-6`}>

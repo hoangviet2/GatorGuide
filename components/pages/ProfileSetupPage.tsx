@@ -1,8 +1,10 @@
-import { useMemo, useState } from "react";
-import { View, Text, TextInput, Pressable, ScrollView } from "react-native";
+import { useMemo, useRef, useState } from "react";
+import { View, Text, TextInput, Pressable, ScrollView, Keyboard, Dimensions } from "react-native";
 import { router } from "expo-router";
 import { MaterialIcons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { Audio } from "expo-av";
+import ConfettiCannon from "react-native-confetti-cannon";
 import { ScreenBackground } from "@/components/layouts/ScreenBackground";
 import { useAppData } from "@/hooks/use-app-data";
 import { useThemeStyles } from "@/hooks/use-theme-styles";
@@ -17,7 +19,12 @@ export default function ProfileSetupPage() {
   const [resume, setResume] = useState("");
   const [transcript, setTranscript] = useState("");
   const [gpa, setGpa] = useState("");
-  const [testScores, setTestScores] = useState("");
+  const [sat, setSat] = useState("");
+  const [act, setAct] = useState("");
+  const [isConfettiPlaying, setIsConfettiPlaying] = useState(false);
+  const [confettiCooldown, setConfettiCooldown] = useState(false);
+
+  const confettiRef = useRef<any>(null);
 
   const handleBack = () => {
     if (step > 1) {
@@ -32,6 +39,21 @@ export default function ProfileSetupPage() {
       const num = parseFloat(value);
       if (value === "" || (Number.isFinite(num) && num <= 4.0) || value === "0" || value === "0.") {
         setGpa(value);
+        // Celebrate perfect GPA! 🎉
+        if (num === 4.0 && value === "4" && !confettiCooldown) {
+          setIsConfettiPlaying(true);
+          setConfettiCooldown(true);
+          setTimeout(() => setIsConfettiPlaying(false), 6000);
+          setTimeout(() => setConfettiCooldown(false), 1000);
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          // Play cheer sound
+          Audio.Sound.createAsync(
+            { uri: 'https://assets.mixkit.co/active_storage/sfx/2018/2018-preview.mp3' },
+            { shouldPlay: true }
+          ).catch(() => {});
+        } else if (value !== "4" && isConfettiPlaying) {
+          setIsConfettiPlaying(false);
+        }
       }
     }
   };
@@ -50,7 +72,8 @@ export default function ProfileSetupPage() {
     await updateUser({
       major,
       gpa,
-      testScores,
+      sat,
+      act,
       resume,
       transcript,
     });
@@ -68,8 +91,13 @@ export default function ProfileSetupPage() {
   };
 
   return (
-    <ScreenBackground>
-      <ScrollView contentContainerStyle={{ paddingBottom: 32 }}>
+    <>
+      <ScreenBackground>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: 32 }}
+        keyboardShouldPersistTaps="handled"
+        onScrollBeginDrag={Keyboard.dismiss}
+      >
         <View className="w-full max-w-md self-center px-6 pt-8">
           <Pressable onPress={handleBack} className="mb-6 flex-row items-center">
             <MaterialIcons name="arrow-back" size={20} color={styles.placeholderColor} />
@@ -119,10 +147,23 @@ export default function ProfileSetupPage() {
                 />
 
                 <FormInput
-                  label="Test Scores (Optional)"
-                  value={testScores}
-                  onChangeText={setTestScores}
-                  placeholder="e.g., SAT: 1450, ACT: 32"
+                  label="SAT Score (Optional)"
+                  value={sat}
+                  onChangeText={setSat}
+                  placeholder="e.g., 1450"
+                  keyboardType="number-pad"
+                  textClass={styles.textClass}
+                  secondaryTextClass={styles.secondaryTextClass}
+                  inputBgClass={styles.inputBgClass}
+                  placeholderColor={styles.placeholderColor}
+                />
+
+                <FormInput
+                  label="ACT Score (Optional)"
+                  value={act}
+                  onChangeText={setAct}
+                  placeholder="e.g., 32"
+                  keyboardType="number-pad"
                   textClass={styles.textClass}
                   secondaryTextClass={styles.secondaryTextClass}
                   inputBgClass={styles.inputBgClass}
@@ -208,5 +249,17 @@ export default function ProfileSetupPage() {
         </View>
       </ScrollView>
     </ScreenBackground>
+    {isConfettiPlaying && (
+      <ConfettiCannon
+        key="confetti"
+        ref={confettiRef}
+        count={150}
+        origin={{ x: Dimensions.get('window').width / 2, y: -10 }}
+        autoStart={true}
+        fadeOut={true}
+        fallSpeed={3000}
+      />
+    )}
+    </>
   );
 }

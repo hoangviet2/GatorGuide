@@ -64,12 +64,14 @@ type User = {
   email: string;
   major?: string;
   gpa?: string;
-  testScores?: string;
-  resume?: string;
+  sat?: string;
+  act?: string;
+  resume?: string;  // filename or local URI
+  transcript?: string;  // filename or local URI
 };
 ```
 
-Update user fields via `updateUser(patch)` from `useAppData()` hook.
+Update user fields via `updateUser(patch)` from `useAppData()` hook. Test scores are stored separately as `sat` and `act` fields, not combined.
 
 ### Theme Integration
 Always use theme context when applying colors/styles:
@@ -127,6 +129,19 @@ Moves starter code to `app-example/` and creates fresh `app/` directory.
 - Uses `expo-haptics` for platform-native feedback (iOS only via `process.env.EXPO_OS === 'ios'` check)
 - Pattern: `Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light)` in onPressIn handler
 
+### Services Layer (`services/` directory)
+All API integrations are centralized in the `services/` folder with a **stub-first approach**:
+- **Stub Mode (default):** All services return mock data immediately; no API calls are made. This allows UI development without API keys or internet.
+- **Configuration:** `services/config.ts` manages API keys via env vars (`EXPO_PUBLIC_USE_STUB_DATA`, `EXPO_PUBLIC_FIREBASE_API_KEY`, etc.)
+- **Services available:**
+  - `authService` - Firebase Authentication (stub: returns mock user)
+  - `collegeService` - College Scorecard API (stub: returns 3 mock Florida colleges)
+  - `aiService` - Google Gemini chat (stub: returns canned keyword-based responses)
+  - `storageService` - Firebase Storage for resume/transcript uploads (stub: saves to AsyncStorage)
+- **Import pattern:** Use barrel export: `import { authService, collegeService } from '@/services'`
+- **Switching to real APIs:** Set `EXPO_PUBLIC_USE_STUB_DATA=false` in env, add real API keys, follow setup in `services/README.md`
+- **Design principle:** Services abstract API details; UI code never knows if it's calling stub or real API
+
 ## Common Patterns to Follow
 
 1. **Export types explicitly** for data structures (User, AppDataState, QuestionnaireAnswers)
@@ -141,6 +156,8 @@ Moves starter code to `app-example/` and creates fresh `app/` directory.
 10. **Always provide sensible defaults** in TextInput and form fields to prevent uncontrolled/controlled component warnings
 11. **Multi-step forms pattern**: Use local state for step tracking (see `ProfileSetupPage.tsx`); progress indicators use conditional `bg-green-500` vs `bg-gray-200`/`bg-gray-800` classes
 12. **File picking stubs**: Document pickers (resume/transcript) currently use placeholder implementations pending full `expo-document-picker` integration
+13. **Auth guard pattern**: Both `app/index.tsx` and `app/(tabs)/_layout.tsx` implement hydration + auth checks. Index routes to profile-setup if user lacks profile completion (checks for `major` or `gpa` fields), else routes to tabs. Tabs layout guards against direct deep linking by redirecting unauthenticated users to login.
+14. **User data schema includes transcript field**: User type has both `resume?: string` and `transcript?: string` for file references (not shown in older docs but exists in the actual type)
 
 ## Files to Reference
 
@@ -150,3 +167,4 @@ Moves starter code to `app-example/` and creates fresh `app/` directory.
 - Layout: [components/layouts/ScreenBackground.tsx](components/layouts/ScreenBackground.tsx)
 - Example pages: [components/pages/ProfilePage.tsx](components/pages/ProfilePage.tsx) (editing pattern), [components/pages/ProfileSetupPage.tsx](components/pages/ProfileSetupPage.tsx) (multi-step form)
 - Route wrapping: [app/profile-setup.tsx](app/profile-setup.tsx) (demonstrates thin route wrapper pattern)
+- Services: [services/README.md](services/README.md) (stub/real API setup), [services/config.ts](services/config.ts) (API configuration)

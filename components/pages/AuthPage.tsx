@@ -1,6 +1,6 @@
 // components/pages/AuthPage.tsx
-import { useEffect, useMemo, useState } from "react";
-import { View, Text, Pressable, Alert } from "react-native";
+import { useMemo, useState } from "react";
+import { View, Text, Pressable, Alert, Keyboard, TouchableWithoutFeedback } from "react-native";
 import { router } from "expo-router";
 import { FontAwesome5 } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -17,12 +17,8 @@ export default function AuthPage() {
 
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
   const [isSignUp, setIsSignUp] = useState(true);
-
-  useEffect(() => {
-    if (!isHydrated) return;
-    if (state.user) router.replace("/(tabs)");
-  }, [isHydrated, state.user]);
 
   const emailError = useMemo(() => {
     const trimmed = email.trim();
@@ -30,14 +26,17 @@ export default function AuthPage() {
   }, [email]);
 
   const canSubmit = useMemo(() => {
-    return !!name.trim() && isEmailValid(email.trim());
-  }, [name, email]);
+    if (isSignUp) {
+      return !!name.trim() && isEmailValid(email.trim()) && password.length >= 6;
+    }
+    return isEmailValid(email.trim()) && password.length >= 6;
+  }, [name, email, password, isSignUp]);
 
   const handleSubmit = async () => {
     const n = name.trim();
     const e = email.trim();
 
-    if (!n) {
+    if (isSignUp && !n) {
       Alert.alert("Missing info", "Please enter your name.");
       return;
     }
@@ -47,15 +46,22 @@ export default function AuthPage() {
       return;
     }
 
+    if (password.length < 6) {
+      Alert.alert("Invalid password", "Password must be at least 6 characters.");
+      return;
+    }
+
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    await signIn({ name: n, email: e });
-    router.replace("/profile-setup");
+    await signIn({ name: n || "User", email: e }); // Use "User" if logging in without name
+    // Go to index which will route to profile-setup or tabs based on completion
+    router.replace("/");
   };
 
   return (
     <ScreenBackground>
-      <View className="flex-1 items-center justify-center px-6">
-        <View className="w-full max-w-md">
+      <TouchableWithoutFeedback onPress={Keyboard.dismiss}>
+        <View className="flex-1 items-center justify-center px-6">
+          <View className="w-full max-w-md">
           <View className="items-center mb-8">
             <View className="bg-green-500 p-4 rounded-full">
               <FontAwesome5 name="graduation-cap" size={48} color="black" />
@@ -91,18 +97,20 @@ export default function AuthPage() {
             </View>
 
             <View className="gap-4">
-              <FormInput
-                label="Name"
-                value={name}
-                onChangeText={setName}
-                placeholder="Enter your name"
-                textClass={styles.textClass}
-                secondaryTextClass={styles.secondaryTextClass}
-                inputBgClass={styles.inputBgClass}
-                placeholderColor={styles.placeholderColor}
-                isEnabled={isHydrated}
-                returnKeyType="next"
-              />
+              {isSignUp && (
+                <FormInput
+                  label="Name"
+                  value={name}
+                  onChangeText={setName}
+                  placeholder="Enter your name"
+                  textClass={styles.textClass}
+                  secondaryTextClass={styles.secondaryTextClass}
+                  inputBgClass={styles.inputBgClass}
+                  placeholderColor={styles.placeholderColor}
+                  isEnabled={isHydrated}
+                  returnKeyType="next"
+                />
+              )}
 
               <FormInput
                 label="Email"
@@ -118,6 +126,20 @@ export default function AuthPage() {
                 keyboardType="email-address"
                 autoCapitalize="none"
                 autoCorrect={false}
+                returnKeyType="next"
+              />
+
+              <FormInput
+                label="Password"
+                value={password}
+                onChangeText={setPassword}
+                placeholder={isSignUp ? "Create a password (min 6 characters)" : "Enter your password"}
+                textClass={styles.textClass}
+                secondaryTextClass={styles.secondaryTextClass}
+                inputBgClass={styles.inputBgClass}
+                placeholderColor={styles.placeholderColor}
+                isEnabled={isHydrated}
+                secureTextEntry
                 returnKeyType="done"
               />
 
@@ -140,8 +162,9 @@ export default function AuthPage() {
               </Pressable>
             </View>
           </View>
+          </View>
         </View>
-      </View>
+      </TouchableWithoutFeedback>
     </ScreenBackground>
   );
 }
