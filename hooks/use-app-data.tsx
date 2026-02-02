@@ -4,6 +4,7 @@ import React, { createContext, useCallback, useContext, useEffect, useMemo, useS
 export type User = {
   name: string;
   email: string;
+  isGuest?: boolean; // true if user is logged in as guest
   major?: string;
   gpa?: string;
   sat?: string;
@@ -33,6 +34,7 @@ type AppDataContextValue = {
   state: AppDataState;
 
   signIn: (user: Pick<User, "name" | "email">) => Promise<void>;
+  signInAsGuest: () => Promise<void>;
   signOut: () => Promise<void>;
 
   updateUser: (patch: Partial<User>) => Promise<void>;
@@ -102,6 +104,7 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         user: {
           name: u.name,
           email: u.email,
+          isGuest: false,
           major: "",
           gpa: "",
           sat: "",
@@ -111,6 +114,23 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
         },
       };
     });
+  }, []);
+
+  const signInAsGuest = useCallback(async () => {
+    setState((prev) => ({
+      ...prev,
+      user: {
+        name: "Guest User",
+        email: `guest-${Date.now()}@gatorguide.local`,
+        isGuest: true,
+        major: "",
+        gpa: "",
+        sat: "",
+        act: "",
+        resume: "",
+        transcript: "",
+      },
+    }));
   }, []);
 
   const signOut = useCallback(async () => {
@@ -151,13 +171,14 @@ export function AppDataProvider({ children }: { children: React.ReactNode }) {
       isHydrated,
       state,
       signIn,
+      signInAsGuest,
       signOut,
       updateUser,
       setQuestionnaireAnswers,
       setNotificationsEnabled,
       clearAll,
     }),
-    [isHydrated, state, signIn, signOut, updateUser, setQuestionnaireAnswers, setNotificationsEnabled, clearAll]
+    [isHydrated, state, signIn, signInAsGuest, signOut, updateUser, setQuestionnaireAnswers, setNotificationsEnabled, clearAll]
   );
 
   return <AppDataContext.Provider value={value}>{children}</AppDataContext.Provider>;

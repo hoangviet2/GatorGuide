@@ -12,7 +12,7 @@ import { FormInput } from "@/components/ui/FormInput";
 const isEmailValid = (value: string) => /^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(value.trim());
 
 export default function AuthPage() {
-  const { isHydrated, state, signIn } = useAppData();
+  const { isHydrated, state, signIn, signInAsGuest } = useAppData();
   const styles = useThemeStyles();
 
   const [name, setName] = useState("");
@@ -58,6 +58,12 @@ export default function AuthPage() {
     await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     await signIn({ name: n || "User", email: e }); // Use "User" if logging in without name
     // Go to index which will route to profile-setup or tabs based on completion
+    router.replace("/");
+  };
+
+  const handleGuestSignIn = async () => {
+    await Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    await signInAsGuest();
     router.replace("/");
   };
 
@@ -166,6 +172,19 @@ export default function AuthPage() {
               >
                 <Text className="text-black font-semibold">{isSignUp ? "Create Account" : "Sign In"}</Text>
               </Pressable>
+
+              <View className="items-center mt-4">
+                <Text className={`${styles.secondaryTextClass} text-sm mb-3`}>Or continue as guest</Text>
+                <Pressable
+                  onPress={handleGuestSignIn}
+                  disabled={!isHydrated}
+                  className={`border-2 border-green-500 rounded-lg py-3 px-6 w-full items-center ${
+                    !isHydrated ? "opacity-60" : ""
+                  }`}
+                >
+                  <Text className="text-green-500 font-semibold">Continue as Guest</Text>
+                </Pressable>
+              </View>
             </View>
           </View>
           </View>
@@ -273,6 +292,19 @@ export default function AuthPage() {
               >
                 <Text className="text-black font-semibold">{isSignUp ? "Create Account" : "Sign In"}</Text>
               </Pressable>
+
+              <View className="items-center mt-4">
+                <Text className={`${styles.secondaryTextClass} text-sm mb-3`}>Or continue as guest</Text>
+                <Pressable
+                  onPress={handleGuestSignIn}
+                  disabled={!isHydrated}
+                  className={`border-2 border-green-500 rounded-lg py-3 px-6 w-full items-center ${
+                    !isHydrated ? "opacity-60" : ""
+                  }`}
+                >
+                  <Text className="text-green-500 font-semibold">Continue as Guest</Text>
+                </Pressable>
+              </View>
             </View>
           </View>
           </View>

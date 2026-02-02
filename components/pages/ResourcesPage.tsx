@@ -96,18 +96,7 @@ export default function ResourcesPage() {
             url: "https://admission.wsu.edu/apply/transfer/",
             tags: ["wsu", "transfer", "apply"],
           },
-          {
-            title: "Central Washington University (CWU) — Transfer Admission",
-            description: "Transfer admissions info for CWU.",
-            url: "https://www.cwu.edu/admissions/transfer/",
-            tags: ["cwu", "transfer", "apply"],
-          },
-          {
-            title: "Eastern Washington University (EWU) — Transfer Admission",
-            description: "Transfer admissions info for EWU.",
-            url: "https://www.ewu.edu/admissions/transfer/",
-            tags: ["ewu", "transfer", "apply"],
-          },
+
           {
             title: "The Evergreen State College — Transfer Admission",
             description: "Transfer admissions info for Evergreen.",
@@ -134,52 +123,10 @@ export default function ResourcesPage() {
             tags: ["uw bothell", "equivalency", "transfer credit", "grc"],
           },
           {
-            title: "Washington State University — Green River Transfer Pathway",
-            description: "WSU pathway information specific to Green River.",
-            url: "https://admission.wsu.edu/transfer/college/green-river-college/",
-            tags: ["wsu", "transfer", "pathway", "grc"],
-          },
-          {
-            title: "Central Washington University — Transfer Equivalency Guide (TES)",
-            description: "Transfer guide (search/select Green River courses).",
-            url: "https://tes.collegesource.com/publicview/TES_publicview01.aspx?aid=204fbfdc-36d3-495b-8c0a-5e589b47ca62&rid=e635e8c0-a2e6-4d02-9dd8-71fc4b65ae6b",
-            tags: ["cwu", "tes", "equivalency", "transfer credit"],
-          },
-          {
-            title: "Eastern Washington University — Transfer Equivalency Guide (TES)",
-            description: "Transfer guide (search/select Green River courses).",
-            url: "https://tes.collegesource.com/publicview/TES_publicview01.aspx?aid=e4fa59cc-4ed8-4ddc-8e34-d3b60be846ae&rid=7898eab1-11c4-4a29-9f3e-6c5b213ef38d",
-            tags: ["ewu", "tes", "equivalency", "transfer credit"],
-          },
-          {
             title: "The Evergreen State College — Green River Transfer Guide (PDF)",
             description: "Evergreen transfer guide for Green River coursework.",
             url: "https://www.evergreen.edu/sites/default/files/2023-06/GreenRiver.pdf",
             tags: ["evergreen", "pdf", "transfer", "grc"],
-          },
-          {
-            title: "Seattle University — Transfer Equivalency Guide (TES)",
-            description: "Transfer guide (select/search for Green River courses).",
-            url: "https://tes.collegesource.com/publicview/TES_publicview01.aspx?aid=6b93a5a2-545d-4118-89be-158a22166b20&rid=8bd9f4e6-e0c7-411f-9af8-d4e3527eed23",
-            tags: ["seattle university", "tes", "equivalency", "transfer credit"],
-          },
-          {
-            title: "Gonzaga University — Transfer Equivalency Guide (TES)",
-            description: "Transfer guide (select/search for Green River courses).",
-            url: "https://tes.collegesource.com/publicview/TES_publicview01.aspx?aid=edff7e4f-61c0-4b52-a4d2-375105e4d0c6&rid=4e6ce63c-d502-4d1e-9b85-4d01e8856f54",
-            tags: ["gonzaga", "tes", "equivalency", "transfer credit"],
-          },
-          {
-            title: "Saint Martin's University — Transfer Equivalency Guide (TES)",
-            description: "Transfer guide (select/search for Green River courses).",
-            url: "https://tes.collegesource.com/publicview/TES_publicview01.aspx?aid=3e9b8680-6a73-4ff5-a9d7-63b1b1f30bd5&rid=063b2c09-c18b-4df1-b05d-f2c587a6af63",
-            tags: ["saint martin's", "tes", "equivalency", "transfer credit"],
-          },
-          {
-            title: "Whitman College — Transfer Equivalency Guide (TES)",
-            description: "Transfer guide (select/search for Green River courses).",
-            url: "https://tes.collegesource.com/publicview/TES_publicview01.aspx?aid=ecf0ae06-9d88-40e0-a124-523fc3f61d73&rid=bacb278e-2efc-40d6-b6be-30126b3d5edd",
-            tags: ["whitman", "tes", "equivalency", "transfer credit"],
           },
         ],
       },
