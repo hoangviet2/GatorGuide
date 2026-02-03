@@ -33,6 +33,7 @@ export default function ProfilePage() {
     sat: "",
     act: "",
     resume: "",
+    transcript: "",
   });
 
   const [showQuestionnaire, setShowQuestionnaire] = useState(false);
@@ -123,9 +124,10 @@ export default function ProfilePage() {
       sat: user?.sat ?? "",
       act: user?.act ?? "",
       resume: user?.resume ?? "",
+      transcript: user?.transcript ?? "",
     });
     setLocalAnswers({ ...blankAnswers, ...(state.questionnaireAnswers ?? {}) });
-  }, [isHydrated, user?.name, user?.major, user?.gpa, user?.sat, user?.act, user?.resume, blankAnswers, state.questionnaireAnswers]);
+  }, [isHydrated, user?.name, user?.major, user?.gpa, user?.sat, user?.act, user?.resume, user?.transcript, blankAnswers, state.questionnaireAnswers]);
 
   const textClass = isDark ? "text-white" : "text-gray-900";
   const secondaryTextClass = isDark ? "text-gray-400" : "text-gray-600";
@@ -154,6 +156,7 @@ export default function ProfilePage() {
       sat: editData.sat,
       act: editData.act,
       resume: editData.resume,
+      transcript: editData.transcript,
     });
     setIsEditing(false);
   };
@@ -182,6 +185,11 @@ export default function ProfilePage() {
   const handlePickResume = () => {
     // stub for now; can add expo-document-picker later
     setEditData((p) => ({ ...p, resume: "resume.pdf" }));
+  };
+
+  const handlePickTranscript = () => {
+    // stub for now; can add expo-document-picker later
+    setEditData((p) => ({ ...p, transcript: "transcript.pdf" }));
   };
 
   const handleQuestionnaireAnswer = (id: string, value: string) => {
@@ -365,6 +373,22 @@ export default function ProfilePage() {
                 editValue={editData.resume}
                 onPress={handlePickResume}
                 uploadText="Upload resume"
+                emptyText="Not uploaded"
+                inputBgClass={inputBgClass}
+                textClass={textClass}
+                secondaryTextClass={secondaryTextClass}
+                borderClass={borderClass}
+              />
+
+              <ProfileField
+                type="upload"
+                icon="upload-file"
+                label="Unofficial Transcript"
+                value={user.transcript}
+                isEditing={isEditing}
+                editValue={editData.transcript}
+                onPress={handlePickTranscript}
+                uploadText="Upload transcript"
                 emptyText="Not uploaded"
                 inputBgClass={inputBgClass}
                 textClass={textClass}

@@ -172,19 +172,6 @@ export default function AuthPage() {
               >
                 <Text className="text-black font-semibold">{isSignUp ? "Create Account" : "Sign In"}</Text>
               </Pressable>
-
-              <View className="items-center mt-4">
-                <Text className={`${styles.secondaryTextClass} text-sm mb-3`}>Or continue as guest</Text>
-                <Pressable
-                  onPress={handleGuestSignIn}
-                  disabled={!isHydrated}
-                  className={`border-2 border-green-500 rounded-lg py-3 px-6 w-full items-center ${
-                    !isHydrated ? "opacity-60" : ""
-                  }`}
-                >
-                  <Text className="text-green-500 font-semibold">Continue as Guest</Text>
-                </Pressable>
-              </View>
             </View>
           </View>
           </View>
@@ -294,15 +281,14 @@ export default function AuthPage() {
               </Pressable>
 
               <View className="items-center mt-4">
-                <Text className={`${styles.secondaryTextClass} text-sm mb-3`}>Or continue as guest</Text>
                 <Pressable
                   onPress={handleGuestSignIn}
                   disabled={!isHydrated}
-                  className={`border-2 border-green-500 rounded-lg py-3 px-6 w-full items-center ${
+                  className={`bg-gray-200 dark:bg-gray-700 rounded-lg py-3 px-6 w-full items-center ${
                     !isHydrated ? "opacity-60" : ""
                   }`}
                 >
-                  <Text className="text-green-500 font-semibold">Continue as Guest</Text>
+                  <Text className="text-gray-800 dark:text-gray-200 font-semibold">Continue as Guest</Text>
                 </Pressable>
               </View>
             </View>
